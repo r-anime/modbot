@@ -1,0 +1,60 @@
+"""
+Config shared by all modules, copy to config.py and set values as appropriate.
+"""
+
+
+DISCORD = {
+    "webhook_feed": "https://discordapp.com/api/webhooks/example/somesecret",  # for new posts
+    "webhook_notifications": "https://discordapp.com/api/webhooks/example2/anotherchannel"  # for front page summaries
+}
+
+
+REDDIT = {
+    "auth": {
+        "client_id": "something",
+        "client_secret": "somethinglonger",
+        "user_agent": "user agents are fun",
+        "username": "ExampleRedditUser",
+        "password": "verySecretPassword"
+    },
+    "subreddit": "test",
+    "poll_interval": 60
+}
+
+
+LOGGING = {
+    "file_path": "bot.log",
+    "log_level_file": 20,  # logging.INFO without importing it
+    "log_level_console": 10  # logging.DEBUG
+}
+
+
+# Database connection string passed to sqlalchemy, default is sqlite but can be postgres/mysql/etc.
+DB = {
+    "connection": "sqlite:///database.db"
+}
+
+# For the new post feed, set the color of the embed based on the text of the post flair.
+FLAIR_COLOR = {
+    "Discussion": 0x7193ff,
+    "Rewatch": 0x0079d3,
+    "Official Media": 0x0aa18f,
+    "News": 0xff4500,
+    "Video": 0xcc3600,
+    "Fanart": 0x73ad34,
+    "OC Fanart": 0x94e044,
+    "Fanart Misc": 0x349e48,
+    "Cosplay": 0xcc5289,
+    "WT!": 0xccac2b,
+    "Writing": 0xddbd37,
+    "Clip": 0x00a6a5,
+    "Satire": 0x6b6031,
+    "Question": 0x9e8d49,
+    "Recommendation": 0x373c3f,
+    "Misc.": 0x646d73,
+    "Contest": 0x007373,
+    "Writing Club": 0xe55a76,
+    "Episode": 0x005ba1,
+    "Weekly": 0xff56cc,
+    "Meme": 0x800080
+}
