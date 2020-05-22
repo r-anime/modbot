@@ -23,7 +23,7 @@ REDDIT = {
 
 
 LOGGING = {
-    "file_path": "bot.log",
+    "file_path": "../bot.log",
     "log_level_file": 20,  # logging.INFO without importing it
     "log_level_console": 10  # logging.DEBUG
 }
@@ -31,7 +31,7 @@ LOGGING = {
 
 # Database connection string passed to sqlalchemy, default is sqlite but can be postgres/mysql/etc.
 DB = {
-    "connection": "sqlite:///database.db"
+    "connection": "sqlite:///../database.db"
 }
 
 # For the new post feed, set the color of the embed based on the text of the post flair.
