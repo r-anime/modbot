@@ -1,0 +1,19 @@
+
+# Config files
+config.py
+
+# Possible database files if using sqlite and not saving to a different directory
+*.db
+*.sqlite
+
+# Log files if not saved to a different directory
+*.log
+
+# Virtual environment/Python stuff
+.venv
+*.pyc
+*.pyo
+__pycache__
+
+# IDE stuff
+*.iml
