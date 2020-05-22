@@ -20,4 +20,4 @@ A collection of Python scripts for monitoring and moderating /r/anime, designed 
 
 ### Front Page
 * Configure `crontab` or other way of scheduling to run `frontpage.py` once per hour, e.g.
- * `0 * * * * cd /opt/r-anime/modbot/; /opt/r-anime/modbot/.venv/bin/python3 /opt/r-anime/modbot/frontpage.py`
+ * `0 * * * * cd /opt/r-anime/modbot/src/; /opt/r-anime/modbot/.venv/bin/python3 /opt/r-anime/modbot/src/frontpage.py`
