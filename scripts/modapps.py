@@ -57,6 +57,16 @@ def process_row(row):
     response_body += f"> Comments: {user_comments_window} ({user_comments_total} total)"
     response_body += f" Submissions: {user_submissions_window} ({user_submissions_total} total)\n\n"
 
+    redditor = reddit.redditor(username)
+    other_subs = redditor.moderated()
+    response_body += "### Other Subreddits Moderated (Subscribers)\n\n> "
+    if other_subs:
+        for sub in other_subs:
+            response_body += f"/r/{sub.display_name} ({sub.subscribers}) // "
+        response_body += "\n\n"
+    else:
+        response_body += "(none)\n\n"
+
     response_parts = []
     for question, answer in row.items():
         # Skip ones we already know/don't care about.
