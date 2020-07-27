@@ -136,7 +136,8 @@ def _validate_flair(submission, report_only_reason=None):
         if flair in (Flair.OCFanart, Flair.Fanart):
             _remove_post_and_message_user(
                 submission,
-                message_templates.removal_not_text_fanart.format(username=username, link=link)
+                message_templates.removal_not_text_fanart.format(username=username, link=link),
+                report_only_reason
             )
 
     if reddit_utils.is_image(submission):
