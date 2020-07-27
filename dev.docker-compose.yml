@@ -1,0 +1,81 @@
+
+version: '3.7'
+services:
+  postgres-db-service:
+    image: postgres:12-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_DB=r-anime
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dontusethisinproduction
+    healthcheck:
+      test: pg_isready -U postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - r-anime
+    volumes:
+      - postgres-db-data:/var/lib/postgresql/data/  # persists data across container rebuilds
+
+  rabbitmq-service:
+    image: rabbitmq:3-management-alpine
+    restart: on-failure
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=r-anime
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=anotherbadproductionpassword
+    healthcheck:
+      test: rabbitmq-diagnostics -q status
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # management UI
+    networks:
+      - r-anime
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq/mnesia/rabbit@my-rabbit
+
+  new-submission-service:
+    image: modbot:dev
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: on-failure
+    depends_on:
+      - postgres-db-service
+      - rabbitmq-service
+    networks:
+      - r-anime
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    command: python3 new.py
+
+  celery-worker-posts-service:
+    image: modbot:dev
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: on-failure
+    depends_on:
+      - postgres-db-service
+      - rabbitmq-service
+    networks:
+      - r-anime
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    command: celery worker --app processor.post_processor --loglevel info
+
+networks:
+  r-anime:
+    name: r-anime
+    driver: bridge
+
+volumes:
+  postgres-db-data:
+  rabbitmq-data:
+
