@@ -6,9 +6,12 @@ Doesn't save any information locally, will only retrieve posts created after the
 from datetime import datetime, timezone
 import time
 
-import praw
-
 import config
+from constants import Flair
+from data.db import session_scope
+from data.models import PostModel, UserModel
+from processor import post_processor
+from utils import reddit as reddit_utils
 from utils import discord
 from utils.logger import logger
 
@@ -20,6 +23,10 @@ def send_new_submission_message(submission):
 
     # Escape any formatting characters in the title since it'll apply them in the embed.
     title = discord.escape_formatting(submission.title)
+
+    flair = Flair.Unflaired
+    if submission.link_flair_text is not None:
+        flair = Flair.get_flair_by_id(submission.link_flair_template_id)
 
     embed_json = {
         "title": title[:253] + '...' if len(title) > 256 else title,
@@ -33,7 +40,7 @@ def send_new_submission_message(submission):
         },
         "fields": [
         ],
-        "color": config.FLAIR_COLOR.get(submission.link_flair_text, 0)
+        "color": flair.color
     }
 
     # Link posts include a direct link to the thing submitted as well.
@@ -54,17 +61,66 @@ def send_new_submission_message(submission):
     discord.send_webhook_message({"embeds": [embed_json]}, channel_webhook_url=config.DISCORD["webhook_feed"])
 
 
+def save_to_db(submission):
+    """
+    Saves information about the post and its author to the database.
+    :param submission: praw SubmissionModel object
+    :return: True if a new submission not previously recorded in database, False otherwise (None if post was deleted)
+    """
+
+    # If a post was deleted immediately don't bother recording anything, just return.
+    if submission.author is None:
+        logger.debug(f'deleted post/user for {submission.id} - {submission.title}')
+        return None
+
+    is_new_submission = False
+
+    with session_scope() as session:
+
+        # Ensure post creator exists in the database first.
+        username_lower = submission.author.name.lower()
+        user_model = session.query(UserModel).filter_by(name=username_lower).one_or_none()
+        if not user_model:
+            user_model = UserModel(
+                name=username_lower,
+                name_formatted=submission.author.name
+            )
+            session.add(user_model)
+
+        # Check to see if the post was already added to the database.
+        post_model = session.query(PostModel).filter_by(id=submission.id).one_or_none()
+        if not post_model:
+            is_new_submission = True
+            post_model = PostModel(
+                id=submission.id,
+                title=submission.title,
+                author_psk=user_model.psk,
+                created_time=datetime.fromtimestamp(submission.created_utc, tz=timezone.utc))
+            session.add(post_model)
+        post_model.flair_text = submission.link_flair_text  # flair may have changed, so update it
+        # If no flair has been selected, link_flair_template_id won't exist as an attribute.
+        if submission.link_flair_text is not None:
+            post_model.flair_id = submission.link_flair_template_id
+
+    return is_new_submission
+
+
 def listen(subreddit):
     logger.info("Starting submission stream...")
-    for submission in subreddit.stream.submissions(skip_existing=True):
-        send_new_submission_message(submission)
+    for submission in subreddit.stream.submissions(skip_existing=False):
+        is_new = save_to_db(submission)
+        # When the stream starts, it will grab the past 100 first and we don't want those to repeat if they were
+        # already sent to Discord.
+        if is_new:
+            send_new_submission_message(submission)
+            post_processor.new_post_job.apply_async((submission.id,), countdown=30)
 
 
 if __name__ == "__main__":
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config.REDDIT["auth"])
+            reddit = reddit_utils.get_instance(reinitialize=True)
             subreddit = reddit.subreddit(config.REDDIT["subreddit"])
             listen(subreddit)
         except Exception:
