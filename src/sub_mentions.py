@@ -6,7 +6,7 @@ from utils import discord
 
 reddit = praw.Reddit(**config.SUB_MENTIONS["auth"]) #Requires an account linked to /u/Sub_Mentions
 
-colour_switcher=1 
+colour_switcher=0 
 while 1==1:
     message = None
     for message in reddit.inbox.unread(limit=1):
@@ -19,8 +19,8 @@ while 1==1:
                 desc = re.sub(r'\(/r/', '(https://www.reddit.com/r/', desc)    #hyperlinks reddit links
                 if len(desc) >= 2000:                                         #message length (max for webhook is 2000)                                          
                     desc=(desc[:1997]+'...')
-                colour_switcher = colour_switcher+1                         #breaks up the flow so its easier on the eye, delete if it's not
-                if colour_switcher%2 == 1:
+                colour_switcher = colour_switcher + 1                       #breaks up the flow so its easier on the eye, delete if it's not
+                if colour_switcher % 2 == 1:
                     colour = 242424
                 else:
                     colour = 22135
