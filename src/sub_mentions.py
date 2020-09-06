@@ -8,8 +8,10 @@ from utils import discord
 from utils.logger import logger
 
 
+colour = 22135
+
+
 def listen(reddit):
-    colour_switcher = 0
 
     for message in reddit.inbox.unread(limit=5):
         if message.author != "Sub_Mentions":
@@ -23,11 +25,8 @@ def listen(reddit):
         if len(desc) >= 2000:  # message length (max for webhook is 2000)
             desc = desc[:1997] + "..."
 
-        colour_switcher = colour_switcher + 1  # breaks up the flow so its easier on the eye, delete if it's not
-        if colour_switcher % 2 == 1:
-            colour = 242424
-        else:
-            colour = 22135
+        global colour
+        colour = 242424 if colour == 22135 else 22135  # switches colors to break up messages
 
         embed_json = {
             "title": title,
