@@ -11,7 +11,7 @@ from utils.logger import logger
 def listen(reddit):
     colour_switcher = 0
 
-    for message in reddit.inbox.unread(limit=1):
+    for message in reddit.inbox.unread(limit=5):
         if message.author != "Sub_Mentions":
             message.mark_read()
             continue
@@ -40,10 +40,12 @@ def listen(reddit):
             {"embeds": [embed_json]},
             channel_webhook_url=config.DISCORD["webhook_sub_mentions"]
         )
+
         message.mark_read()
+        time.sleep(5)  # wait between messages to not flood Discord
 
     logger.debug("waiting...")
-    time.sleep(2.1)
+    time.sleep(30)  # wait between inbox retrievals because it's not necessary to be realtime
 
 
 if __name__ == "__main__":
