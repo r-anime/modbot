@@ -1,4 +1,4 @@
-import re
+
 import time
 
 import praw
@@ -18,10 +18,15 @@ def listen(reddit):
             message.mark_read()
             continue
 
-        title = message.subject
-        desc = message.body
+        author, desc = message.body.split("\n\n", 1)
+
+        title = message.subject.replace("[Notification] Your subreddit has been mentioned in ", "")
+        title = title.replace("!", " - ")
+        title += author.replace("Author: ", "")
+
         desc = desc[:-279]  # removes info at the end of the message
-        desc = re.sub(r"\(/r/", "(https://www.reddit.com/r/", desc)  # hyperlinks reddit links
+        desc = desc.replace("(/r/", "(https://www.reddit.com/r/")  # hyperlinks reddit links
+        desc = desc.replace("\n___\n", "")
         if len(desc) >= 2000:  # message length (max for webhook is 2000)
             desc = desc[:1997] + "..."
 
