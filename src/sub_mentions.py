@@ -1,40 +1,65 @@
-import config
-import praw
-import re
+
 import time
+
+import praw
+
+import config
 from utils import discord
+from utils.logger import logger
 
-reddit = praw.Reddit(**config.SUB_MENTIONS["auth"]) #Requires an account linked to /u/Sub_Mentions
 
-colour_switcher=0 
-while 1==1:
-    message = None
-    for message in reddit.inbox.unread(limit=1):
-        if message.author == "Sub_Mentions":
-            try:
-                message.mark_read() 
-                title = message.subject 
-                desc = message.body
-                desc = desc[:-279]                                              #removes info at the end of the message
-                desc = re.sub(r"\(/r/", "(https://www.reddit.com/r/", desc)    #hyperlinks reddit links
-                if len(desc) >= 2000:                                         #message length (max for webhook is 2000)                                          
-                    desc=(desc[:1997]+"...")
-                colour_switcher = colour_switcher + 1                       #breaks up the flow so its easier on the eye, delete if it's not
-                if colour_switcher % 2 == 1:
-                    colour = 242424
-                else:
-                    colour = 22135
-            except: NameError
-        else: 
+colour = 22135
+
+
+def listen(reddit):
+
+    for message in reddit.inbox.unread(limit=5):
+        if message.author != "Sub_Mentions":
             message.mark_read()
-            message = None
-    if message is not None:
+            continue
+
+        author, desc = message.body.split("\n\n", 1)
+
+        title = message.subject.replace("[Notification] Your subreddit has been mentioned in ", "")
+        title = title.replace("!", " - ")
+        title += author.replace("Author: ", "")
+
+        desc = desc[:-279]  # removes info at the end of the message
+        desc = desc.replace("(/r/", "(https://www.reddit.com/r/")  # hyperlinks reddit links
+        desc = desc.replace("\n___\n", "")
+        if len(desc) >= 2000:  # message length (max for webhook is 2000)
+            desc = desc[:1997] + "..."
+
+        global colour
+        colour = 242424 if colour == 22135 else 22135  # switches colors to break up messages
+
         embed_json = {
             "title": title,
             "description": desc,
-            "color": colour            #yeah the Australia
-            }
+            "color": colour  # yeah the Australia
+        }
+
+        logger.debug(embed_json)
+        discord.send_webhook_message(
+            {"embeds": [embed_json]},
+            channel_webhook_url=config.DISCORD["webhook_sub_mentions"]
+        )
+
+        message.mark_read()
+        time.sleep(5)  # wait between messages to not flood Discord
+
+    logger.debug("waiting...")
+    time.sleep(30)  # wait between inbox retrievals because it's not necessary to be realtime
+
+
+if __name__ == "__main__":
+    while True:
         try:
-            discord.send_webhook_message({"embeds": [embed_json]}, channel_webhook_url=config.DISCORD["webhook_sub_mentions"])
-        except: NameError
-    time.sleep(2.1)
+            logger.info("Connecting to Reddit...")
+            reddit = praw.Reddit(**config.SUB_MENTIONS["auth"])  # Requires an account linked to /u/Sub_Mentions
+            while True:
+                listen(reddit)
+        except Exception:
+            delay_time = 30
+            logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")
+            time.sleep(delay_time)
