@@ -11,7 +11,7 @@ from utils.logger import logger
 colour = 22135
 
 
-def listen(reddit):
+def check_inbox(reddit):
 
     for message in reddit.inbox.unread(limit=5):
         if message.author != "Sub_Mentions":
@@ -48,9 +48,6 @@ def listen(reddit):
         message.mark_read()
         time.sleep(5)  # wait between messages to not flood Discord
 
-    logger.debug("waiting...")
-    time.sleep(30)  # wait between inbox retrievals because it's not necessary to be realtime
-
 
 if __name__ == "__main__":
     while True:
@@ -58,7 +55,9 @@ if __name__ == "__main__":
             logger.info("Connecting to Reddit...")
             reddit = praw.Reddit(**config.SUB_MENTIONS["auth"])  # Requires an account linked to /u/Sub_Mentions
             while True:
-                listen(reddit)
+                check_inbox(reddit)
+                logger.debug("waiting...")
+                time.sleep(30)  # wait between inbox retrievals because it's not necessary to be realtime
         except Exception:
             delay_time = 30
             logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")
