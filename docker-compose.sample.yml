@@ -1,0 +1,31 @@
+version: '3.6'
+
+services:
+  db:
+    container_name: modbot-db
+    image: postgres:13.2-alpine
+    environment:
+      POSTGRES_PASSWORD: samplepassword
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  mod_log:
+    container_name: modbot-mod-log
+    depends_on:
+      - db
+    env_file:
+      sample.env
+    build: .
+    command: python3 mod_log.py
+    restart: unless-stopped
+
+  tools:
+    container_name: modbot-tools
+    depends_on:
+      - db
+    env_file:
+      sample.env
+    build:
+      context: .
+      dockerfile: Tools.Dockerfile

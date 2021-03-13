@@ -12,9 +12,9 @@ def _setup_logging():
 
     global logger
 
-    logger = logging.getLogger('modbot')
+    logger = logging.getLogger("modbot")
     logger.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s %(levelname)07s [%(filename)s:%(lineno)d] - %(message)s')
+    formatter = logging.Formatter("%(asctime)s %(levelname)07s [%(filename)s:%(lineno)d] - %(message)s")
 
     file_handler = logging.FileHandler(config.LOGGING["file_path"])
     file_handler.setLevel(config.LOGGING["log_level_file"])

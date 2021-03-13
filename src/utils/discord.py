@@ -12,16 +12,16 @@ from utils.logger import logger
 MESSAGE_LIMIT = 2000
 
 # Use these to escape characters that would become formatting.
-_UNESCAPE_RE = re.compile(r'\\')
-_ESCAPE_RE = re.compile(r'([*_~`|\\])')
+_UNESCAPE_RE = re.compile(r"\\")
+_ESCAPE_RE = re.compile(r"([*_~`|\\])")
 
 
 def escape_formatting(string):
     """
     Escapes any Discord formatting characters.
     """
-    unescaped = _UNESCAPE_RE.sub('', string)
-    escaped = _ESCAPE_RE.sub(r'\\\g<1>', unescaped)
+    unescaped = _UNESCAPE_RE.sub("", string)
+    escaped = _ESCAPE_RE.sub(r"\\\g<1>", unescaped)
 
     return escaped
 

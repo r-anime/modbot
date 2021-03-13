@@ -29,9 +29,9 @@ LOGGING = {
 }
 
 
-# Database connection string passed to sqlalchemy, default is sqlite but can be postgres/mysql/etc.
+# Database connection string passed to sqlalchemy, default is now postgres under docker but can be sqlite/mysql/etc.
 DB = {
-    "connection": "sqlite:///../database.db"
+    "connection": "postgresql+psycopg2://postgres:samplepassword@modbot-db:5432/postgres"
 }
 
 # For the new post feed, set the color of the embed based on the text of the post flair.

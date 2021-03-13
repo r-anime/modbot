@@ -5,8 +5,8 @@ import config
 
 from contextlib import contextmanager
 
-engine = create_engine(config.DB["connection"])
-Session = sessionmaker(bind=engine)
+_engine = create_engine(config.DB["connection"])
+Session = sessionmaker(bind=_engine)
 
 
 @contextmanager

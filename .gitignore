@@ -1,6 +1,7 @@
 
 # Config files
 config.py
+dev.env
 
 # Possible database files if using sqlite and not saving to a different directory
 *.db
@@ -8,6 +9,9 @@ config.py
 
 # Log files if not saved to a different directory
 *.log
+
+# Docker-compose files
+*.docker-compose.yml
 
 # Virtual environment/Python stuff
 .venv
