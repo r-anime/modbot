@@ -3,12 +3,12 @@ Monitors a subreddit and saves all mod actions to the database.
 Will send a notification to Discord if the action was taken by someone not previously registered as a mod.
 """
 
+import argparse
 from datetime import datetime, timedelta, timezone
 import time
 
 import praw
 from praw.models.mod_action import ModAction
-from praw.models.subreddits import Subreddit
 
 import config
 from data.mod_action_data import ModActionModel
@@ -26,6 +26,10 @@ subreddit = None
 
 
 def parse_mod_action(mod_action: ModAction):
+    """
+    Process a single PRAW ModAction. Assumes that reddit and subreddit are already instantiated by
+    one of the two entry points (monitor_stream or load_archive).
+    """
 
     # Check if we've already processed this mod action, do nothing if so.
     mod_action_id = mod_action.id.replace("ModAction_", "")
@@ -149,7 +153,7 @@ def send_discord_message(mod_action: ModActionModel):
         "author": {
             "name": f"Mod Log - /u/{mod_action.mod}",
         },
-        "title": mod_action.action,
+        "title": f"{mod_action.mod}: {mod_action.action}",
         "timestamp": mod_action.created_time.isoformat(),
         "fields": [],
         "color": 0xCC0000,
@@ -159,14 +163,14 @@ def send_discord_message(mod_action: ModActionModel):
     target = None
     if mod_action.target_comment_id:
         target = comment_service.get_comment_by_id(mod_action.target_comment_id)
-        embed_json["title"] = f"{mod_action.action} by {mod_action.target_user}"
+        embed_json["title"] = f"{mod_action.mod}: {mod_action.action} by {mod_action.target_user}"
     elif mod_action.target_post_id:
         target = post_service.get_post_by_id(mod_action.target_post_id)
-        title = discord.escape_formatting(f"{mod_action.action} - {target.title}")
+        title = discord.escape_formatting(f"{mod_action.mod}: {mod_action.action} - {target.title}")
         embed_json["title"] = title[:253] + "..." if len(title) > 256 else title
     elif mod_action.target_user:
         target = user_service.get_user(mod_action.target_user)
-        embed_json["title"] = f"{mod_action.action} - {mod_action.target_user}"
+        embed_json["title"] = f"{mod_action.mod}: {mod_action.action} - {mod_action.target_user}"
     if target:
         embed_json["url"] = reddit_utils.make_permalink(target)
 
@@ -180,10 +184,82 @@ def send_discord_message(mod_action: ModActionModel):
     discord.send_webhook_message({"embeds": [embed_json]}, channel_webhook_url=config.DISCORD["webhook_notifications"])
 
 
-def listen(subreddit: Subreddit):
-    logger.info("Starting mod-log stream...")
-    for mod_action in subreddit.mod.stream.log():
-        parse_mod_action(mod_action)
+def monitor_stream():
+    """
+    Monitor the subreddit for new actions and parse them when they come in. Will restart upon encountering an error.
+    """
+
+    global reddit, subreddit
+    while True:
+        try:
+            logger.info("Connecting to Reddit...")
+            reddit = praw.Reddit(**config.REDDIT["auth"])
+            subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+            _get_moderators()
+            logger.info("Starting mod log stream...")
+            for mod_action in subreddit.mod.stream.log():
+                parse_mod_action(mod_action)
+        except Exception:
+            delay_time = 30
+            logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")
+            time.sleep(delay_time)
+
+
+def load_archive(archive_args: argparse.Namespace):
+    """
+    Start loading earlier mod actions (prior to action specified by --id if provided) until reaching --date or
+    the end of available logs. Will restart from last known action if encountering an error.
+    """
+
+    after_date = archive_args.date
+    before_action_id = archive_args.id
+
+    if after_date is None:
+        after_date = datetime.now(timezone.utc) - timedelta(days=95)
+    elif not after_date.tzname():
+        after_date = after_date.replace(tzinfo=timezone.utc)
+    after_timestamp = after_date.timestamp()
+
+    if before_action_id and not before_action_id.startswith("ModAction_"):
+        before_action_id = "ModAction_" + before_action_id
+
+    global reddit, subreddit
+    reddit = praw.Reddit(**config.REDDIT["auth"])
+    subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+
+    current_id = before_action_id if before_action_id else [log.id for log in subreddit.mod.log(limit=1)][0]
+    logger.info(f"[Archive] Loading mod log going back until {after_date.isoformat()}, starting from {current_id}")
+    current_timestamp = datetime.now(timezone.utc).timestamp()
+    # All this is put inside a loop in case it encounters an error; will automatically restart until it reaches
+    # the target date or runs out of actions to process (if date is too far in the past).
+    while True:
+        logger.info("Connecting to Reddit...")
+        # Since the parse_mod_action function relies on reddit and subreddit existing in the global scope.
+        reddit = praw.Reddit(**config.REDDIT["auth"])
+        subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+        actions_processed = 0
+        while after_timestamp < current_timestamp or actions_processed > 0:
+            actions_processed = 0
+            logger.info(f"[Archive] Getting next batch of actions...")
+            for mod_action in subreddit.mod.log(params={"after": current_id}, limit=500):
+                # Once we reach the target date, stop parsing.
+                if after_timestamp > mod_action.created_utc:
+                    current_timestamp = mod_action.created_utc
+                    break
+
+                # The earliest action in the batch and will be the start of the next loop.
+                if mod_action.created_utc < current_timestamp:
+                    current_id = mod_action.id
+                    current_timestamp = mod_action.created_utc
+
+                parse_mod_action(mod_action)
+                actions_processed += 1
+
+            logger.info(
+                f"[Archive] Processed {actions_processed} actions, most recent:"
+                f" {current_id} - {datetime.fromtimestamp(current_timestamp).isoformat()}"
+            )
+        return
 
 
 def _get_moderators():
@@ -198,15 +274,31 @@ def _get_moderators():
         active_mods.append(mod.username)
 
 
+def _get_parser() -> argparse.ArgumentParser:
+    new_parser = argparse.ArgumentParser(description="Monitor for new mod actions.")
+    new_parser.add_argument(
+        "--archive", action="store_true", help="Archive earlier mod actions rather than monitoring current activity."
+    )
+    new_parser.add_argument(
+        "-d",
+        "--date",
+        type=lambda d: datetime.fromisoformat(d),
+        help="Date to stop at (ISO 8601 format) with --archive.",
+    )
+    new_parser.add_argument(
+        "-id", "--id", type=str, help="Starting mod action ID to work backward from with --archive."
+    )
+    return new_parser
+
+
 if __name__ == "__main__":
-    while True:
-        try:
-            logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config.REDDIT["auth"])
-            subreddit = reddit.subreddit(config.REDDIT["subreddit"])
-            _get_moderators()
-            listen(subreddit)
-        except Exception:
-            delay_time = 30
-            logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")
-            time.sleep(delay_time)
+    parser = _get_parser()
+    args = parser.parse_args()
+    # Load mod list regardless of what's next.
+    _get_moderators()
+    if args.archive:
+        # Load earlier mod actions.
+        load_archive(args)
+    else:
+        # Default path - continually monitor for new mod actions.
+        monitor_stream()
