@@ -63,6 +63,7 @@ def add_comment_parent_tree(reddit: Reddit, reddit_comment: Comment):
     Starting with the comment that's the *parent* of the specified comment (non-inclusive),
     recursively crawl up the tree and add all of them to the database.
     Stops when it reaches a comment that already exists in the database or upon reaching the root.
+    Needs improvements for efficiency.
     """
 
     # Could do this with recursive calls to this function, but

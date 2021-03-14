@@ -209,6 +209,8 @@ def load_archive(archive_args: argparse.Namespace):
     """
     Start loading earlier mod actions (prior to action specified by --id if provided) until reaching --date or
     the end of available logs. Will restart from last known action if encountering an error.
+    It's rather inefficient as it processes a single action at a time and could probably batch together
+    some Reddit API calls.
     """
 
     after_date = archive_args.date
@@ -233,33 +235,40 @@ def load_archive(archive_args: argparse.Namespace):
     # All this is put inside a loop in case it encounters an error; will automatically restart until it reaches
     # the target date or runs out of actions to process (if date is too far in the past).
     while True:
-        logger.info("Connecting to Reddit...")
-        # Since the parse_mod_action function relies on reddit and subreddit existing in the global scope.
-        reddit = praw.Reddit(**config.REDDIT["auth"])
-        subreddit = reddit.subreddit(config.REDDIT["subreddit"])
-        actions_processed = 0
-        while after_timestamp < current_timestamp or actions_processed > 0:
+        try:
+            logger.info("Connecting to Reddit...")
+            # Since the parse_mod_action function relies on reddit and subreddit existing in the global scope.
+            reddit = praw.Reddit(**config.REDDIT["auth"])
+            subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+            # Not exactly sure of behavior when running past what's available, but this attempts to track when there
+            # aren't any processed so we can reasonably drop out.
             actions_processed = 0
-            logger.info(f"[Archive] Getting next batch of actions...")
-            for mod_action in subreddit.mod.log(params={"after": current_id}, limit=500):
-                # Once we reach the target date, stop parsing.
-                if after_timestamp > mod_action.created_utc:
-                    current_timestamp = mod_action.created_utc
-                    break
+            while after_timestamp < current_timestamp or actions_processed > 0:
+                actions_processed = 0
+                logger.info(f"[Archive] Getting next batch of actions...")
+                for mod_action in subreddit.mod.log(params={"after": current_id}, limit=500):
+                    # Once we reach the target date, stop parsing.
+                    if after_timestamp > mod_action.created_utc:
+                        current_timestamp = mod_action.created_utc
+                        break
 
-                # The earliest action in the batch and will be the start of the next loop.
-                if mod_action.created_utc < current_timestamp:
-                    current_id = mod_action.id
-                    current_timestamp = mod_action.created_utc
+                    parse_mod_action(mod_action)
+                    actions_processed += 1
 
-                parse_mod_action(mod_action)
-                actions_processed += 1
+                    # The earliest action in the batch and will be the start of the next loop.
+                    if mod_action.created_utc < current_timestamp:
+                        current_id = mod_action.id
+                        current_timestamp = mod_action.created_utc
 
-            logger.info(
-                f"[Archive] Processed {actions_processed} actions, most recent:"
-                f" {current_id} - {datetime.fromtimestamp(current_timestamp).isoformat()}"
-            )
-        return
+                logger.info(
+                    f"[Archive] Processed {actions_processed} actions, most recent:"
+                    f" {current_id} - {datetime.fromtimestamp(current_timestamp).isoformat()}"
+                )
+            return
+        except Exception:
+            delay_time = 30
+            logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")
+            time.sleep(delay_time)
 
 
 def _get_moderators():
