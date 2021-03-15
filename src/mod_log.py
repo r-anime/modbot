@@ -243,7 +243,7 @@ def load_archive(archive_args: argparse.Namespace):
             # Not exactly sure of behavior when running past what's available, but this attempts to track when there
             # aren't any processed so we can reasonably drop out.
             actions_processed = 0
-            while after_timestamp < current_timestamp or actions_processed > 0:
+            while after_timestamp < current_timestamp:
                 actions_processed = 0
                 logger.info(f"[Archive] Getting next batch of actions...")
                 for mod_action in subreddit.mod.log(params={"after": current_id}, limit=500):
@@ -260,10 +260,18 @@ def load_archive(archive_args: argparse.Namespace):
                         current_id = mod_action.id
                         current_timestamp = mod_action.created_utc
 
+                if actions_processed == 0:
+                    logger.info(
+                        f"[Archive] No actions remaining, most recent:"
+                        f" {current_id} - {datetime.fromtimestamp(current_timestamp).isoformat()}"
+                    )
+                    break
+
                 logger.info(
                     f"[Archive] Processed {actions_processed} actions, most recent:"
                     f" {current_id} - {datetime.fromtimestamp(current_timestamp).isoformat()}"
                 )
+
             return
         except Exception:
             delay_time = 30
