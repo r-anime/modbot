@@ -20,7 +20,7 @@ from utils.logger import logger
 # Cache a list of moderator usernames so we can tell if an action is taken by admins.
 active_mods = []
 
-# Current reddit session, initialized when first starting up or after an error.
+# Current reddit session and subreddit, initialized when first starting up or after an error.
 reddit = None
 subreddit = None
 
