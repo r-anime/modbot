@@ -51,6 +51,9 @@ def update_comment(existing_comment: CommentModel, reddit_comment: Comment) -> C
 
     new_comment = _create_comment_model(reddit_comment)
     for field in new_comment.columns:
+        # Fields that shouldn't be updated since they won't change.
+        if field in ('author',):
+            continue
         if hasattr(new_comment, field):
             setattr(existing_comment, field, getattr(new_comment, field))
 

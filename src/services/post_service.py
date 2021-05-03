@@ -44,6 +44,9 @@ def update_post(existing_post: PostModel, reddit_post: Submission) -> PostModel:
 
     new_post = _create_post_model(reddit_post)
     for field in new_post.columns:
+        # Things that shouldn't be updated.
+        if field in ('author', 'title', 'url'):
+            continue
         if hasattr(new_post, field):
             setattr(existing_post, field, getattr(new_post, field))
 
