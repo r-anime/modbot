@@ -68,9 +68,9 @@ class SnapshotData(BaseData):
 
         return SnapshotModel(result_rows[0])
 
-    def get_rank_by_datetime(self, post_id: int, target_datetime: datetime.datetime) -> Optional[int]:
+    def get_rank_by_datetime(self, post_id: int, target_datetime: datetime.datetime, min_rank: int) -> Optional[int]:
         """Gets ranking of the specified post at the time provided, None if not ranked then.
-        Assumes UTC if no timezone provided, rounds down to the hour."""
+        Ignores rankings below min_rank. Assumes UTC if no timezone provided, rounds down to the hour."""
 
         if target_datetime.tzname() is None:
             copy_datetime = target_datetime.replace(tzinfo=datetime.timezone.utc)
@@ -83,11 +83,13 @@ class SnapshotData(BaseData):
         sql = text(
             """
         SELECT * FROM snapshot_frontpage JOIN snapshots s on snapshot_frontpage.snapshot_id = s.id
-        WHERE s.date = :date AND s.hour = :hour AND snapshot_frontpage.post_id = :post_id;
+        WHERE s.date = :date AND s.hour = :hour 
+        AND snapshot_frontpage.post_id = :post_id 
+        AND snapshot_frontpage.rank <= :min_rank;
         """
         )
 
-        result_rows = self.execute(sql, date=date, hour=hour, post_id=post_id)
+        result_rows = self.execute(sql, date=date, hour=hour, post_id=post_id, min_rank=min_rank)
         if not result_rows:
             return None
 

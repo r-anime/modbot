@@ -48,10 +48,11 @@ def add_frontpage_post(reddit_post: Submission, snapshot: SnapshotModel, rank: i
     return saved_frontpage_model
 
 
-def get_frontpage_rank(post_id: int, target_datetime: datetime) -> Optional[int]:
-    """Gets the ranking of the post at the specified target_datetime, None if not ranked at that time."""
+def get_frontpage_rank(post_id: int, target_datetime: datetime, min_rank: int = 25) -> Optional[int]:
+    """Gets the ranking of the post at the specified target_datetime, None if not ranked at that time.
+    Will ignore anything below min_rank."""
 
-    return _snapshot_data.get_rank_by_datetime(post_id, target_datetime)
+    return _snapshot_data.get_rank_by_datetime(post_id, target_datetime, min_rank)
 
 
 def get_post_hours_ranked(post_id: int, min_rank: int = 25) -> int:

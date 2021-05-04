@@ -24,7 +24,8 @@ def upgrade():
         creation_time timestamp with time zone not null default now(),
         date date not null,
         hour int not null,
-        subscribers int
+        subscribers int,
+        UNIQUE (date, hour)
     );
     
     CREATE TABLE IF NOT EXISTS snapshot_frontpage (
