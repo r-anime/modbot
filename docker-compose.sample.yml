@@ -10,6 +10,16 @@ services:
       - "5432:5432"
     restart: unless-stopped
 
+  new_posts:
+    container_name: modbot-new-posts
+    depends_on:
+      - db
+    env_file:
+      dev.env
+    build: .
+    command: python3 new_posts.py
+    restart: unless-stopped
+
   mod_log:
     container_name: modbot-mod-log
     depends_on:

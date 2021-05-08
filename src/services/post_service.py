@@ -43,9 +43,16 @@ def update_post(existing_post: PostModel, reddit_post: Submission) -> PostModel:
     """
 
     new_post = _create_post_model(reddit_post)
+
+    non_update_fields = ["author", "title", "url"]
+
+    # If a user has deleted their post or admins took it down we don't want to overwrite the original text.
+    # Removals by "anti_evil_ops" or "moderator" are fine since those don't change the body.
+    if reddit_post.removed_by_category in ("deleted", "content_takedown"):
+        non_update_fields.append("body")
+
     for field in new_post.columns:
-        # Things that shouldn't be updated.
-        if field in ('author', 'title', 'url'):
+        if field in non_update_fields:
             continue
         if hasattr(new_post, field):
             setattr(existing_post, field, getattr(new_post, field))

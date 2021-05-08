@@ -24,6 +24,7 @@ class PostModel(BaseModel):
         "distinguished",
         "deleted",
         "removed",
+        "sent_to_feed",
     ]
 
     def set_id(self, id_base36: str):
