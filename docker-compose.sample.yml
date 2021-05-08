@@ -20,6 +20,16 @@ services:
     command: python3 new_posts.py
     restart: unless-stopped
 
+  new_comments:
+    container_name: modbot-new-comments
+    depends_on:
+      - db
+    env_file:
+      dev.env
+    build: .
+    command: python3 new_comments.py
+    restart: unless-stopped
+
   mod_log:
     container_name: modbot-mod-log
     depends_on:
