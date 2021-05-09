@@ -40,6 +40,16 @@ services:
     command: python3 mod_log.py
     restart: unless-stopped
 
+  sub_mentions:
+    container_name: modbot-sub-mentions
+    depends_on:
+      - db
+    env_file:
+      dev.env
+    build: .
+    command: python3 sub_mentions.py
+    restart: unless-stopped
+
   tools:
     container_name: modbot-tools
     depends_on:

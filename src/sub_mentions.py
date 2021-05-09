@@ -23,6 +23,7 @@ def check_inbox(reddit):
         title = message.subject.replace("[Notification] Your subreddit has been mentioned in ", "")
         title = title.replace("!", " - ")
         title += author.replace("Author: ", "")
+        logger.info(f"Processing message {title}")
 
         desc = desc[:-279]  # removes info at the end of the message
         desc = desc.replace("(/r/", "(https://www.reddit.com/r/")  # hyperlinks reddit links
