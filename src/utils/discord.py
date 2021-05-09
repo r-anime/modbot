@@ -26,12 +26,12 @@ def escape_formatting(string):
     return escaped
 
 
-def send_webhook_message(json_content, channel_webhook_url=config.DISCORD["webhook_notifications"], retries=3):
+def send_webhook_message(channel_webhook_url, json_content, retries=3):
     """
     Send a message to the specified channel via a webhook.
 
-    :param json_content: dictionary containing data to send (usually "content" or "embed" keys)
     :param channel_webhook_url: full URL for the receiving webhook
+    :param json_content: dictionary containing data to send (usually "content" or "embed" keys)
     :param retries: number of times to attempt to send message again if it fails
     :return: True if message was successfully sent, False otherwise
     """

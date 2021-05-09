@@ -41,10 +41,7 @@ def check_inbox(reddit):
         }
 
         logger.debug(embed_json)
-        discord.send_webhook_message(
-            {"embeds": [embed_json]},
-            channel_webhook_url=config.DISCORD["webhook_sub_mentions"]
-        )
+        discord.send_webhook_message(config.DISCORD["webhook_sub_mentions"], {"embeds": [embed_json]})
 
         message.mark_read()
         time.sleep(5)  # wait between messages to not flood Discord

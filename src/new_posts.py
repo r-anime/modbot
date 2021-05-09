@@ -84,7 +84,7 @@ def send_new_submission_message(submission: Submission):
 
     logger.debug(embed_json)
 
-    discord.send_webhook_message({"embeds": [embed_json]}, channel_webhook_url=config.DISCORD["webhook_feed"])
+    discord.send_webhook_message(config.DISCORD["webhook_new_posts"], {"embeds": [embed_json]})
 
 
 def monitor_stream():

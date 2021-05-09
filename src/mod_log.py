@@ -181,7 +181,7 @@ def send_discord_message(mod_action: ModActionModel):
         desc_info = {"name": "Description", "value": mod_action.description}
         embed_json["fields"].append(desc_info)
 
-    discord.send_webhook_message({"embeds": [embed_json]}, channel_webhook_url=config.DISCORD["webhook_notifications"])
+    discord.send_webhook_message(config.DISCORD["webhook_mod_log"], {"embeds": [embed_json]})
 
 
 def monitor_stream():

@@ -113,7 +113,7 @@ def check_front_page(subreddit):
 
     message_body += "\n```"
     for message in message_list:
-        discord.send_webhook_message({"content": message})
+        discord.send_webhook_message(config.DISCORD["webhook_frontpage"], {"content": message})
 
 
 if __name__ == "__main__":

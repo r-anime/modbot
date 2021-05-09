@@ -4,8 +4,10 @@ Config shared by all modules, copy to config.py and set values as appropriate.
 
 
 DISCORD = {
-    "webhook_feed": "https://discordapp.com/api/webhooks/example/somesecret",  # for new posts
-    "webhook_notifications": "https://discordapp.com/api/webhooks/example2/anotherchannel"  # for front page summaries
+    "webhook_new_posts": "https://discordapp.com/api/webhooks/example/somesecret",
+    "webhook_frontpage": "https://discordapp.com/api/webhooks/example2/anotherchannel",
+    "webhook_mod_log": "https://discordapp.com/api/webhooks/example2/anotherchannel",
+    "webhook_sub_mentions": "https://discordapp.com/api/webhooks/example2/anotherchannel",
 }
 
 
