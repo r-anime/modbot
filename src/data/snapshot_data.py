@@ -11,7 +11,7 @@ class SnapshotModel(BaseModel):
     _pk_field = "id"
     _columns = [
         "id",
-        "creation_time",
+        "created_time",
         "date",
         "hour",
         "subscribers"

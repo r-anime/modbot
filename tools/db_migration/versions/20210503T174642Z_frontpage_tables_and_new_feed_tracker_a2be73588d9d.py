@@ -21,7 +21,7 @@ def upgrade():
     
     CREATE TABLE IF NOT EXISTS snapshots (
         id serial primary key,
-        creation_time timestamp with time zone not null default now(),
+        created_time timestamp with time zone not null default now(),
         date date not null,
         hour int not null,
         subscribers int,
