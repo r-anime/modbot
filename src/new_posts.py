@@ -17,6 +17,7 @@ from utils.logger import logger
 # Current reddit session and subreddit, initialized when first starting up or after an error.
 reddit = None
 subreddit = None
+flair_colors = {}
 
 
 def process_post(submission: Submission):
@@ -66,7 +67,7 @@ def send_new_submission_message(submission: Submission):
         },
         "fields": [
         ],
-        "color": config.FLAIR_COLOR.get(submission.link_flair_text, 0)
+        "color": flair_colors.get(submission.link_flair_text, 0)
     }
 
     # Link posts include a direct link to the thing submitted as well.
@@ -87,6 +88,19 @@ def send_new_submission_message(submission: Submission):
     discord.send_webhook_message(config.DISCORD["webhook_new_posts"], {"embeds": [embed_json]})
 
 
+def load_post_flairs():
+    """
+    Loads flair colors from the subreddit, used to color Discord embeds.
+    """
+
+    global flair_colors
+    flair_colors = {}
+    flair_list = subreddit.flair.link_templates
+    for flair in flair_list:
+        color_hex = flair["background_color"].replace("#", "")
+        flair_colors[flair["text"]] = int(color_hex, base=16)
+
+
 def monitor_stream():
     """
     Monitor the subreddit for new posts and parse them when they come in. Will restart upon encountering an error.
@@ -98,6 +112,8 @@ def monitor_stream():
             logger.info("Connecting to Reddit...")
             reddit = praw.Reddit(**config.REDDIT["auth"])
             subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+            logger.info("Loading flairs...")
+            load_post_flairs()
             logger.info("Starting submission stream...")
             for submission in subreddit.stream.submissions(skip_existing=False):
                 process_post(submission)
