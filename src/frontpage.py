@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 import praw
 
-import config
+import config_loader
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 from services import snapshot_service
@@ -113,11 +113,11 @@ def check_front_page(subreddit):
 
     message_body += "\n```"
     for message in message_list:
-        discord.send_webhook_message(config.DISCORD["webhook_frontpage"], {"content": message})
+        discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"content": message})
 
 
 if __name__ == "__main__":
     logger.info("Connecting to Reddit...")
-    reddit = praw.Reddit(**config.REDDIT["auth"])
-    subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
     check_front_page(subreddit)

@@ -5,7 +5,7 @@ import time
 
 import requests
 
-import config
+import config_loader
 from utils.logger import logger
 
 
@@ -35,6 +35,9 @@ def send_webhook_message(channel_webhook_url, json_content, retries=3):
     :param retries: number of times to attempt to send message again if it fails
     :return: True if message was successfully sent, False otherwise
     """
+
+    if not config_loader.DISCORD["enabled"]:
+        return True
 
     attempt = 0
     while attempt <= retries:

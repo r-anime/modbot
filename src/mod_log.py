@@ -10,7 +10,7 @@ import time
 import praw
 from praw.models.mod_action import ModAction
 
-import config
+import config_loader
 from data.mod_action_data import ModActionModel
 from services import base_data_service, comment_service, mod_action_service, post_service, user_service
 from utils import discord, reddit as reddit_utils
@@ -181,7 +181,7 @@ def send_discord_message(mod_action: ModActionModel):
         desc_info = {"name": "Description", "value": mod_action.description}
         embed_json["fields"].append(desc_info)
 
-    discord.send_webhook_message(config.DISCORD["webhook_mod_log"], {"embeds": [embed_json]})
+    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
 
 def monitor_stream():
@@ -193,8 +193,8 @@ def monitor_stream():
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config.REDDIT["auth"])
-            subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             _get_moderators()
             logger.info("Starting mod log stream...")
             for mod_action in subreddit.mod.stream.log():
@@ -226,8 +226,8 @@ def load_archive(archive_args: argparse.Namespace):
         before_action_id = "ModAction_" + before_action_id
 
     global reddit, subreddit
-    reddit = praw.Reddit(**config.REDDIT["auth"])
-    subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
 
     current_id = before_action_id if before_action_id else [log.id for log in subreddit.mod.log(limit=1)][0]
     logger.info(f"[Archive] Loading mod log going back until {after_date.isoformat()}, starting from {current_id}")
@@ -238,8 +238,8 @@ def load_archive(archive_args: argparse.Namespace):
         try:
             logger.info("Connecting to Reddit...")
             # Since the parse_mod_action function relies on reddit and subreddit existing in the global scope.
-            reddit = praw.Reddit(**config.REDDIT["auth"])
-            subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             # Not exactly sure of behavior when running past what's available, but this attempts to track when there
             # aren't any processed so we can reasonably drop out.
             actions_processed = 0

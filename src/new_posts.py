@@ -8,7 +8,7 @@ import time
 import praw
 from praw.models.reddit.submission import Submission
 
-import config
+import config_loader
 from services import post_service, base_data_service
 from utils import discord
 from utils.logger import logger
@@ -85,7 +85,7 @@ def send_new_submission_message(submission: Submission):
 
     logger.debug(embed_json)
 
-    discord.send_webhook_message(config.DISCORD["webhook_new_posts"], {"embeds": [embed_json]})
+    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
 
 def load_post_flairs():
@@ -110,8 +110,8 @@ def monitor_stream():
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config.REDDIT["auth"])
-            subreddit = reddit.subreddit(config.REDDIT["subreddit"])
+            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             logger.info("Loading flairs...")
             load_post_flairs()
             logger.info("Starting submission stream...")

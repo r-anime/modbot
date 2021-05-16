@@ -2,7 +2,7 @@
 
 import logging
 
-import config
+import config_loader
 
 
 logger = None
@@ -16,15 +16,18 @@ def _setup_logging():
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter("%(asctime)s %(levelname)07s [%(filename)s:%(lineno)d] - %(message)s")
 
-    file_handler = logging.FileHandler(config.LOGGING["file_path"])
-    file_handler.setLevel(config.LOGGING["log_level_file"])
-    file_handler.setFormatter(formatter)
+    log_file_path = config_loader.LOGGING["file_path"]
+    if log_file_path:
+        file_handler = logging.FileHandler(config_loader.LOGGING["file_path"])
+        file_handler.setLevel(config_loader.LOGGING["log_level_file"])
+        file_handler.setFormatter(formatter)
+
+        logger.addHandler(file_handler)
 
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(config.LOGGING["log_level_console"])
+    console_handler.setLevel(config_loader.LOGGING["log_level_console"])
     console_handler.setFormatter(formatter)
 
-    logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
 

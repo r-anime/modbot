@@ -15,7 +15,7 @@ services:
     depends_on:
       - db
     env_file:
-      dev.env
+      template.env
     build: .
     command: python3 new_posts.py
     restart: unless-stopped
@@ -25,7 +25,7 @@ services:
     depends_on:
       - db
     env_file:
-      dev.env
+      template.env
     build: .
     command: python3 new_comments.py
     restart: unless-stopped
@@ -35,17 +35,15 @@ services:
     depends_on:
       - db
     env_file:
-      sample.env
+      template.env
     build: .
     command: python3 mod_log.py
     restart: unless-stopped
 
   sub_mentions:
     container_name: modbot-sub-mentions
-    depends_on:
-      - db
     env_file:
-      dev.env
+      template.env
     build: .
     command: python3 sub_mentions.py
     restart: unless-stopped
@@ -55,7 +53,7 @@ services:
     depends_on:
       - db
     env_file:
-      sample.env
+      template.env
     build:
       context: .
       dockerfile: Tools.Dockerfile

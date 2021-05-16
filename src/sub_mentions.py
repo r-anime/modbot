@@ -3,7 +3,7 @@ import time
 
 import praw
 
-import config
+import config_loader
 from utils import discord
 from utils.logger import logger
 
@@ -41,7 +41,7 @@ def check_inbox(reddit):
         }
 
         logger.debug(embed_json)
-        discord.send_webhook_message(config.DISCORD["webhook_sub_mentions"], {"embeds": [embed_json]})
+        discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
         message.mark_read()
         time.sleep(5)  # wait between messages to not flood Discord
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config.SUB_MENTIONS["auth"])  # Requires an account linked to /u/Sub_Mentions
+            reddit = praw.Reddit(**config_loader.REDDIT["auth"])  # Requires an account linked to /u/Sub_Mentions
             while True:
                 check_inbox(reddit)
                 logger.debug("waiting...")

@@ -2,3 +2,4 @@ praw==7.2.0
 psycopg2-binary==2.8.6
 requests==2.25.1
 SQLAlchemy==1.3.23
+python-dotenv==0.17.1

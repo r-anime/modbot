@@ -5,12 +5,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 from sqlalchemy.engine.result import RowProxy
 
-import config
+import config_loader
 from data.session import session_scope
-from utils.logger import logger
 
 
-_engine = create_engine(config.DB["connection"])
+_engine = create_engine(config_loader.DB_CONNECTION)
 
 
 class BaseModel:
