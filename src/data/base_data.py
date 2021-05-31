@@ -119,7 +119,7 @@ class BaseData:
             # ON CONFLICT DO NOTHING doesn't return an existing row, so fetch it if necessary.
             if result_row is None and not error_on_conflict and hasattr(model, model.pk_field):
                 sql = text(f"SELECT * FROM {model.table} WHERE {model.pk_field} = :pk;")
-                result_row = session.execute(sql, pk=getattr(model, model.pk_field)).fetchone()
+                result_row = session.execute(sql, {"pk": getattr(model, model.pk_field)}).fetchone()
 
             new_model = model.__class__(result_row)
 
