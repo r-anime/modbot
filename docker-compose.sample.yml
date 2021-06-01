@@ -1,0 +1,59 @@
+version: '3.6'
+
+services:
+  db:
+    container_name: modbot-db
+    image: postgres:13.2-alpine
+    environment:
+      POSTGRES_PASSWORD: samplepassword
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  new_posts:
+    container_name: modbot-new-posts
+    depends_on:
+      - db
+    env_file:
+      template.env
+    build: .
+    command: python3 new_posts.py
+    restart: unless-stopped
+
+  new_comments:
+    container_name: modbot-new-comments
+    depends_on:
+      - db
+    env_file:
+      template.env
+    build: .
+    command: python3 new_comments.py
+    restart: unless-stopped
+
+  mod_log:
+    container_name: modbot-mod-log
+    depends_on:
+      - db
+    env_file:
+      template.env
+    build: .
+    command: python3 mod_log.py
+    restart: unless-stopped
+
+  sub_mentions:
+    container_name: modbot-sub-mentions
+    env_file:
+      template.env
+    build: .
+    command: python3 sub_mentions.py
+    restart: unless-stopped
+
+  tools:
+    container_name: modbot-tools
+    depends_on:
+      - db
+    env_file:
+      template.env
+    build:
+      context: .
+      dockerfile: Tools.Dockerfile

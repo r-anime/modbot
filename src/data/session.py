@@ -1,12 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import config
+import config_loader
 
 from contextlib import contextmanager
 
-engine = create_engine(config.DB["connection"])
-Session = sessionmaker(bind=engine)
+_engine = create_engine(config_loader.DB_CONNECTION)
+Session = sessionmaker(bind=_engine)
 
 
 @contextmanager
