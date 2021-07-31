@@ -33,17 +33,33 @@ def _report_monthly(report_args: argparse.Namespace):
 
     removed_posts_humans = mod_action_service.count_mod_actions(
         "removelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+    removed_posts_humans += mod_action_service.count_mod_actions(
+        "spamlink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+
     removed_posts_bots = mod_action_service.count_mod_actions(
         "removelink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+    removed_posts_bots += mod_action_service.count_mod_actions(
+        "spamlink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+
     removed_posts_total = mod_action_service.count_mod_actions(
         "removelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
+    removed_posts_total += mod_action_service.count_mod_actions(
+        "spamlink", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
 
     removed_comments_humans = mod_action_service.count_mod_actions(
         "removecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+    removed_comments_humans += mod_action_service.count_mod_actions(
+        "spamcomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+
     removed_comments_bots = mod_action_service.count_mod_actions(
         "removecomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+    removed_comments_bots += mod_action_service.count_mod_actions(
+        "spamcomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+
     removed_comments_total = mod_action_service.count_mod_actions(
         "removecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
+    removed_comments_total += mod_action_service.count_mod_actions(
+        "spamcomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
 
     approved_posts = mod_action_service.count_mod_actions(
         "approvelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
