@@ -7,22 +7,21 @@ One caveat is that the username field must be sanitized (i.e. ensured valid) in 
 
 import csv
 from datetime import datetime, timedelta
+import re
 
-import psaw
 import praw
 
-import config
+import config_loader
 
 
-response_dump_thread_id = ''
-app_announcement_datetime = datetime(2020, 6, 16, 20, 38, 5)
+response_dump_thread_id = ''  # TODO: take thread id as script arg... or create one (with title as arg)?
+app_announcement_datetime = datetime(2020, 6, 16, 20, 38, 5)  # TODO: take datetime or app thread id as script arg
 activity_window_datetime = app_announcement_datetime - timedelta(days=90)
-csv_file_path = 'apps.csv'
+csv_file_path = 'apps.csv'  # TODO: make script arg
 username_key = 'What is your Reddit username?'
 
 
-psaw_api = psaw.PushshiftAPI()
-reddit = praw.Reddit(**config.REDDIT["auth"])
+reddit = praw.Reddit(**config_loader.REDDIT["auth"])
 
 
 def process_row(row):
@@ -33,29 +32,30 @@ def process_row(row):
     :return: list of strings
     """
 
-    username = row[username_key]
+    username = re.sub("/?u?/", "", row[username_key])
     print(f"Processing {username}...")
 
     response_body = f"### {username_key}\n\n> https://www.reddit.com/user/{username}\n\n"
 
+    # TODO: rework to not use PSAW since that broke.
     # Get the activity of the user both in the 90-day window prior to the posting of applications (as specified)
     # and overall history on /r/anime.
-    user_activity_window = psaw_api.redditor_subreddit_activity(
-        username,
-        before=app_announcement_datetime,
-        after=activity_window_datetime)
-    user_comments_window = user_activity_window['comment']['anime']
-    user_submissions_window = user_activity_window['submission']['anime']
-
-    user_activity_total = psaw_api.redditor_subreddit_activity(username)
-    user_comments_total = user_activity_total['comment']['anime']
-    user_submissions_total = user_activity_total['submission']['anime']
-
-    passes_activity_threshold = '✅' if user_comments_window + user_submissions_window > 50 else '❌'
-
-    response_body += f"### Activity in past 90 days {passes_activity_threshold}\n\n"
-    response_body += f"> Comments: {user_comments_window} ({user_comments_total} total)"
-    response_body += f" Submissions: {user_submissions_window} ({user_submissions_total} total)\n\n"
+    # user_activity_window = psaw_api.redditor_subreddit_activity(
+    #     username,
+    #     before=app_announcement_datetime,
+    #     after=activity_window_datetime)
+    # user_comments_window = user_activity_window['comment']['anime']
+    # user_submissions_window = user_activity_window['submission']['anime']
+    #
+    # user_activity_total = psaw_api.redditor_subreddit_activity(username)
+    # user_comments_total = user_activity_total['comment']['anime']
+    # user_submissions_total = user_activity_total['submission']['anime']
+    #
+    # passes_activity_threshold = '✅' if user_comments_window + user_submissions_window > 50 else '❌'
+    #
+    # response_body += f"### Activity in past 90 days {passes_activity_threshold}\n\n"
+    # response_body += f"> Comments: {user_comments_window} ({user_comments_total} total)"
+    # response_body += f" Submissions: {user_submissions_window} ({user_submissions_total} total)\n\n"
 
     redditor = reddit.redditor(username)
     other_subs = redditor.moderated()
@@ -76,15 +76,36 @@ def process_row(row):
         answer_str = '\n\n> '.join(answer.splitlines())  # for multi-line responses
         line = f"### {question}\n\n> {answer_str}\n\n"
 
+        # Single answer longer than comment limit, for the verbose folks.
+        if len(line) > 10000:
+            print(f"Single answer longer than 10k for {username} on {question}.")
+            response_parts.append(response_body)
+            response_body = f"### {question}"
+            answer_lines = answer.splitlines()
+
+            # Use shorter paragraphs dammit. TODO: try to fix this?
+            if any(len(f"### {question} (cont.)\n\n> {line}") > 10000 for line in answer_lines):
+                print(f"Line too long for {username}, skipping them.")
+                return []
+
+            for line in answer_lines:
+                if len(response_body + f"\n\n> {line}\n\n") > 10000:
+                    response_parts.append(response_body)
+                    response_body = f"### {question} (cont.)"
+                response_body += f"\n\n> {line}"
+            response_body += "\n\n"
+
         # If the comment would be too long with the new line, start a new comment.
-        if len(response_body + line) > 10000:
+        elif len(response_body + line) > 10000:
             response_parts.append(response_body)
             response_body = ''
-        response_body += line
+            response_body += line
+        else:
+            response_body += line
 
     response_parts.append(response_body)
 
-    print(f"Done with {username}")
+    print(f"Done with {username}.")
     return response_parts
 
 
