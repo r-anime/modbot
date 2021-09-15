@@ -83,6 +83,15 @@ def send_new_submission_message(submission: Submission):
             }
             embed_json["fields"].append(media_info)
 
+    if submission.media is not None and submission.media.get("reddit_video"):
+        reddit_video = submission.media["reddit_video"]
+        if "height" in reddit_video and "width" in reddit_video:
+            media_info = {
+                "name": "Resolution",
+                "value": f'{reddit_video["width"]}x{reddit_video["height"]}'
+            }
+            embed_json["fields"].append(media_info)
+
     logger.debug(embed_json)
 
     discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
