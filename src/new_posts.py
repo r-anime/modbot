@@ -95,7 +95,7 @@ def send_new_submission_message(submission: Submission):
             minutes, seconds = reddit_video["duration"] // 60, reddit_video["duration"] % 60
             media_info = {
                 "name": "Duration",
-                "value": f"{minutes}:{seconds}"
+                "value": f"{minutes}:{seconds:02}"
             }
             embed_json["fields"].append(media_info)
 
