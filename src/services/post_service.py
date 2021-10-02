@@ -48,7 +48,7 @@ def update_post(existing_post: PostModel, reddit_post: Submission) -> PostModel:
 
     # If a user has deleted their post or admins took it down we don't want to overwrite the original text.
     # Removals by "anti_evil_ops" or "moderator" are fine since those don't change the body.
-    if reddit_post.removed_by_category in ("deleted", "content_takedown"):
+    if reddit_post.removed_by_category in ("deleted", "content_takedown") or reddit_post.removal_reason in ("legal",):
         non_update_fields.append("body")
 
     for field in new_post.columns:

@@ -50,9 +50,17 @@ def update_comment(existing_comment: CommentModel, reddit_comment: Comment) -> C
     """
 
     new_comment = _create_comment_model(reddit_comment)
+
+    # Fields that shouldn't be updated since they won't change.
+    non_update_fields = ["author"]
+
+    # If a user has deleted their post or admins took it down we don't want to overwrite the original text.
+    # Removals by "anti_evil_ops" or "moderator" are fine since those don't change the body.
+    if reddit_comment.removal_reason in ("legal",):
+        non_update_fields.append("body")
+
     for field in new_comment.columns:
-        # Fields that shouldn't be updated since they won't change.
-        if field in ('author',):
+        if field in non_update_fields:
             continue
         if hasattr(new_comment, field):
             setattr(existing_comment, field, getattr(new_comment, field))
