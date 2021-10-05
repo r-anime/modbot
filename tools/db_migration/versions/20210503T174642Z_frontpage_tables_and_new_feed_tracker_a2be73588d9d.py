@@ -19,7 +19,7 @@ def upgrade():
     op.execute(
         """
     ALTER TABLE posts ADD COLUMN IF NOT EXISTS sent_to_feed BOOLEAN NOT NULL DEFAULT false;
-    
+
     CREATE TABLE IF NOT EXISTS snapshots (
         id serial primary key,
         created_time timestamp with time zone not null default now(),
@@ -28,7 +28,7 @@ def upgrade():
         subscribers int,
         UNIQUE (date, hour)
     );
-    
+
     CREATE TABLE IF NOT EXISTS snapshot_frontpage (
         post_id bigint not null references posts(id),
         snapshot_id int not null references snapshots(id),
