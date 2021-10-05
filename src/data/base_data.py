@@ -3,7 +3,7 @@ from typing import Union
 
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
-from sqlalchemy.engine.result import RowProxy
+from sqlalchemy.engine.result import Row
 
 import config_loader
 from data.session import session_scope
@@ -14,7 +14,7 @@ _engine = create_engine(config_loader.DB_CONNECTION)
 
 class BaseModel:
     """
-    A thin wrapper around SQLAlchemy's RowProxy object. Tables are defined manually with alembic.
+    A thin wrapper around SQLAlchemy's Row object. Tables are defined manually with alembic.
     """
 
     _row = None
@@ -26,7 +26,7 @@ class BaseModel:
     # Columns that have been modified, with new values.
     _modified = {}
 
-    def __init__(self, row: RowProxy = None, lazy: bool = True):
+    def __init__(self, row: Row = None, lazy: bool = True):
         self._row = row
 
         # If we're not lazy loading, load all columns at once.
