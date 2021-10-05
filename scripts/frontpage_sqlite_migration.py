@@ -12,8 +12,8 @@ import sqlite3
 
 from data.post_data import PostData, PostModel
 from data.snapshot_data import SnapshotData, SnapshotModel, SnapshotFrontpageModel
-from data.user_data import UserData, UserModel
-from services import post_service, user_service
+from data.user_data import UserData
+from services import post_service
 from utils.logger import logger
 from utils.reddit import base36decode
 
@@ -117,7 +117,7 @@ def main():
     while current_datetime <= now:
         try:
             migrate_snapshots(current_datetime.date(), current_datetime.hour)
-        except:
+        except Exception:
             logger.exception(f"Failed to migrate {current_datetime.date()} - {current_datetime.hour}")
         current_datetime += timedelta(hours=1)
         if current_datetime.hour == 0:

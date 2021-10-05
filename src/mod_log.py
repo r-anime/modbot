@@ -245,7 +245,7 @@ def load_archive(archive_args: argparse.Namespace):
             actions_processed = 0
             while after_timestamp < current_timestamp:
                 actions_processed = 0
-                logger.info(f"[Archive] Getting next batch of actions...")
+                logger.info("[Archive] Getting next batch of actions...")
                 for mod_action in subreddit.mod.log(params={"after": current_id}, limit=500):
                     # Once we reach the target date, stop parsing.
                     if after_timestamp > mod_action.created_utc:

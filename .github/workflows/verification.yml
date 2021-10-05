@@ -3,7 +3,7 @@ name: Code Verification
 on: [push, pull_request]
 
 jobs:
-  lint:
+  linting:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

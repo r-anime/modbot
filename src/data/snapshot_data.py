@@ -71,8 +71,8 @@ class SnapshotData(BaseData):
         sql = text(
             """
         SELECT * FROM snapshot_frontpage JOIN snapshots s on snapshot_frontpage.snapshot_id = s.id
-        WHERE s.date = :date AND s.hour = :hour 
-        AND snapshot_frontpage.post_id = :post_id 
+        WHERE s.date = :date AND s.hour = :hour
+        AND snapshot_frontpage.post_id = :post_id
         AND snapshot_frontpage.rank <= :min_rank;
         """
         )

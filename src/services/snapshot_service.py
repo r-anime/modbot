@@ -1,11 +1,10 @@
-from datetime import datetime, timezone
-from typing import Union, Optional
+from datetime import datetime
+from typing import Optional
 
 from praw.models.reddit.submission import Submission
-from praw import Reddit
 
 from data.snapshot_data import SnapshotData, SnapshotModel, SnapshotFrontpageModel
-from services import user_service, post_service
+from services import post_service
 from utils.logger import logger
 
 

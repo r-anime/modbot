@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Union, Optional
+from typing import Optional
 
 from praw.models.mod_action import ModAction
 
