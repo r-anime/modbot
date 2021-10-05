@@ -56,18 +56,13 @@ def send_new_submission_message(submission: Submission):
     title = discord.escape_formatting(submission.title)
 
     embed_json = {
-        "title": title[:253] + '...' if len(title) > 256 else title,
+        "title": title[:253] + "..." if len(title) > 256 else title,
         "url": f"https://redd.it/{submission.id}",
-        "author": {
-            "name": f"/u/{submission.author.name}"
-        },
+        "author": {"name": f"/u/{submission.author.name}"},
         "timestamp": datetime.fromtimestamp(submission.created_utc, timezone.utc).isoformat(),
-        "footer": {
-            "text": f"{submission.id} | {submission.link_flair_text}"
-        },
-        "fields": [
-        ],
-        "color": flair_colors.get(submission.link_flair_text, 0)
+        "footer": {"text": f"{submission.id} | {submission.link_flair_text}"},
+        "fields": [],
+        "color": flair_colors.get(submission.link_flair_text, 0),
     }
 
     # Link posts include a direct link to the thing submitted as well.
@@ -77,26 +72,17 @@ def send_new_submission_message(submission: Submission):
     # If they're posting social media/Youtube channel links grab extra info for searching later.
     if submission.media is not None and submission.media.get("oembed"):
         if submission.media["oembed"].get("author_url"):
-            media_info = {
-                "name": "Media Channel",
-                "value": submission.media["oembed"]["author_url"]
-            }
+            media_info = {"name": "Media Channel", "value": submission.media["oembed"]["author_url"]}
             embed_json["fields"].append(media_info)
 
     if submission.media is not None and submission.media.get("reddit_video"):
         reddit_video = submission.media["reddit_video"]
         if "height" in reddit_video and "width" in reddit_video:
-            media_info = {
-                "name": "Resolution",
-                "value": f'{reddit_video["width"]}x{reddit_video["height"]}'
-            }
+            media_info = {"name": "Resolution", "value": f'{reddit_video["width"]}x{reddit_video["height"]}'}
             embed_json["fields"].append(media_info)
         if "duration" in reddit_video:
             minutes, seconds = reddit_video["duration"] // 60, reddit_video["duration"] % 60
-            media_info = {
-                "name": "Duration",
-                "value": f"{minutes}:{seconds:02}"
-            }
+            media_info = {"name": "Duration", "value": f"{minutes}:{seconds:02}"}
             embed_json["fields"].append(media_info)
 
     logger.debug(embed_json)

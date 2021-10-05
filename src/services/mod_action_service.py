@@ -54,13 +54,13 @@ def add_mod_action(reddit_mod_action: ModAction) -> ModActionModel:
 
 
 def count_mod_actions(
-        action: str,
-        start_time: str,
-        end_time: str,
-        distinct: bool = True,
-        details: str = "",
-        mod_accounts_list: list = None,
-        exclude_mod_accounts_list: list = None
+    action: str,
+    start_time: str,
+    end_time: str,
+    distinct: bool = True,
+    details: str = "",
+    mod_accounts_list: list = None,
+    exclude_mod_accounts_list: list = None,
 ) -> int:
     """
     Count total numbers of the specified action for the time period.
@@ -82,7 +82,7 @@ def count_mod_actions(
             end_time,
             details=details,
             include_mods=mod_accounts_list,
-            exclude_mods=exclude_mod_accounts_list
+            exclude_mods=exclude_mod_accounts_list,
         )
         return count
 
@@ -102,6 +102,6 @@ def count_mod_actions(
         distinct_target=distinct_target,
         details=details,
         include_mods=mod_accounts_list,
-        exclude_mods=exclude_mod_accounts_list
+        exclude_mods=exclude_mod_accounts_list,
     )
     return count

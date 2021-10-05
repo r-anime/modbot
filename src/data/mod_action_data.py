@@ -37,14 +37,14 @@ class ModActionData(BaseData):
         return ModActionModel(result_rows[0])
 
     def count_mod_actions(
-            self,
-            action: str,
-            start_time: str,
-            end_time: str,
-            distinct_target: str = "",
-            details: str = "",
-            include_mods: list = None,
-            exclude_mods: list = None
+        self,
+        action: str,
+        start_time: str,
+        end_time: str,
+        distinct_target: str = "",
+        details: str = "",
+        include_mods: list = None,
+        exclude_mods: list = None,
     ) -> int:
         """
 

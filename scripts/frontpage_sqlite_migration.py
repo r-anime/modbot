@@ -31,10 +31,7 @@ def migrate_posts(offset=0):
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
 
-    rows = conn.execute(
-        "SELECT * FROM posts LIMIT 1000 OFFSET ?;",
-        (offset,)
-    ).fetchall()
+    rows = conn.execute("SELECT * FROM posts LIMIT 1000 OFFSET ?;", (offset,)).fetchall()
 
     conn.close()
 
@@ -73,10 +70,7 @@ def migrate_snapshots(date, hour):
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
 
-    row = conn.execute(
-        "SELECT * FROM snapshots WHERE date=? and hour=?;",
-        (date, hour)
-    ).fetchone()
+    row = conn.execute("SELECT * FROM snapshots WHERE date=? and hour=?;", (date, hour)).fetchone()
 
     # No data, past the last recorded snapshot?
     if not row:
@@ -93,7 +87,7 @@ def migrate_snapshots(date, hour):
 
     rows = conn.execute(
         "SELECT sf.*, p.id FROM snapshot_frontpage sf JOIN posts p on sf.post_psk = p.psk WHERE snapshot_psk=?;",
-        (old_snapshot_psk,)
+        (old_snapshot_psk,),
     ).fetchall()
 
     conn.close()
@@ -118,7 +112,7 @@ def main():
         if current_offset % 1000 == 0:
             logger.info(f"Migrated {current_offset} posts total")
 
-    current_datetime = datetime.fromisoformat('2020-05-12 04:00:00.000')
+    current_datetime = datetime.fromisoformat("2020-05-12 04:00:00.000")
     now = datetime.utcnow()
     while current_datetime <= now:
         try:

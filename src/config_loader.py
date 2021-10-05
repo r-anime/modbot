@@ -17,16 +17,18 @@ REDDIT = {
         "client_secret": os.environ.get("REDDIT_SECRET"),
         "user_agent": os.environ.get("REDDIT_USER_AGENT"),
         "username": os.environ.get("REDDIT_USERNAME"),
-        "password": os.environ.get("REDDIT_USER_PASSWORD")
-    }
+        "password": os.environ.get("REDDIT_USER_PASSWORD"),
+    },
 }
 
-DB_CONNECTION = f'postgresql+psycopg2://{os.environ.get("DB_USER")}:{os.environ.get("DB_PASSWORD")}@' \
-                f'{os.environ.get("DB_HOST")}:{os.environ.get("DB_PORT")}/{os.environ.get("DB_NAME")}'
+DB_CONNECTION = (
+    f'postgresql+psycopg2://{os.environ.get("DB_USER")}:{os.environ.get("DB_PASSWORD")}@'
+    f'{os.environ.get("DB_HOST")}:{os.environ.get("DB_PORT")}/{os.environ.get("DB_NAME")}'
+)
 
 DISCORD = {
     "enabled": os.environ.get("DISCORD_ENABLED", "False").lower() in ["true", "t", "1", "yes", "y"],  # load as bool
-    "webhook_url": os.environ.get("DISCORD_WEBHOOK_URL")
+    "webhook_url": os.environ.get("DISCORD_WEBHOOK_URL"),
 }
 
 LOGGING = {

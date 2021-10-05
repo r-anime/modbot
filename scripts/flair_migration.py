@@ -18,13 +18,7 @@ CSS_EMOJI = {
     "a-WT2020": ":TWT:",
 }
 
-_counters = {
-    "MAL": 0,
-    "AniList": 0,
-    "Kitsu": 0,
-    "Anime-Planet": 0,
-    "AniDB": 0
-}
+_counters = {"MAL": 0, "AniList": 0, "Kitsu": 0, "Anime-Planet": 0, "AniDB": 0}
 
 LIST_SITE_TEMPLATES = {
     "mal": {
@@ -99,7 +93,7 @@ def migrate_flairs():
             # Generator will load in batches of 1000 from Reddit, this covers the entire sub.
             for user_flair in subreddit.flair(limit=None):
                 new_flair_text, template_id = _parse_flair(user_flair)
-                if user_flair["flair_css_class"] is not None and user_flair["flair_css_class"].startswith('v-'):
+                if user_flair["flair_css_class"] is not None and user_flair["flair_css_class"].startswith("v-"):
                     verified_users.append(user_flair["user"].name)
 
                 if new_flair_text:

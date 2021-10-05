@@ -9,7 +9,6 @@ from services import user_service, post_service
 from utils.logger import logger
 
 
-
 _snapshot_data = SnapshotData()
 
 

@@ -14,11 +14,11 @@ import praw
 import config_loader
 
 
-response_dump_thread_id = ''  # TODO: take thread id as script arg... or create one (with title as arg)?
+response_dump_thread_id = ""  # TODO: take thread id as script arg... or create one (with title as arg)?
 app_announcement_datetime = datetime(2020, 6, 16, 20, 38, 5)  # TODO: take datetime or app thread id as script arg
 activity_window_datetime = app_announcement_datetime - timedelta(days=90)
-csv_file_path = 'apps.csv'  # TODO: make script arg
-username_key = 'What is your Reddit username?'
+csv_file_path = "apps.csv"  # TODO: make script arg
+username_key = "What is your Reddit username?"
 
 
 reddit = praw.Reddit(**config_loader.REDDIT["auth"])
@@ -70,10 +70,10 @@ def process_row(row):
     response_parts = []
     for question, answer in row.items():
         # Skip ones we already know/don't care about.
-        if question in ('Timestamp', username_key):
+        if question in ("Timestamp", username_key):
             continue
 
-        answer_str = '\n\n> '.join(answer.splitlines())  # for multi-line responses
+        answer_str = "\n\n> ".join(answer.splitlines())  # for multi-line responses
         line = f"### {question}\n\n> {answer_str}\n\n"
 
         # Single answer longer than comment limit, for the verbose folks.
@@ -98,7 +98,7 @@ def process_row(row):
         # If the comment would be too long with the new line, start a new comment.
         elif len(response_body + line) > 10000:
             response_parts.append(response_body)
-            response_body = ''
+            response_body = ""
             response_body += line
         else:
             response_body += line
@@ -113,7 +113,7 @@ def main():
     thread = reddit.submission(id=response_dump_thread_id)
 
     # read CSV
-    with open(csv_file_path, newline='') as csv_file:
+    with open(csv_file_path, newline="") as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
             comment_list = process_row(row)

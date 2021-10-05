@@ -1,4 +1,3 @@
-
 import time
 
 import praw
@@ -34,11 +33,7 @@ def check_inbox(reddit):
         global colour
         colour = 242424 if colour == 22135 else 22135  # switches colors to break up messages
 
-        embed_json = {
-            "title": title,
-            "description": desc,
-            "color": colour  # yeah the Australia
-        }
+        embed_json = {"title": title, "description": desc, "color": colour}  # yeah the Australia
 
         logger.debug(embed_json)
         discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})

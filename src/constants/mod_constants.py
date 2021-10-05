@@ -23,10 +23,4 @@ MOD_ACTIONS_COMMENTS = [
     "spamcomment",
 ]
 
-MOD_ACTIONS_USERS = [
-    "acceptmoderatorinvite",
-    "banuser",
-    "invitemoderator",
-    "removemoderator",
-    "unbanuser"
-]
+MOD_ACTIONS_USERS = ["acceptmoderatorinvite", "banuser", "invitemoderator", "removemoderator", "unbanuser"]

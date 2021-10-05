@@ -32,53 +32,73 @@ def _report_monthly(report_args: argparse.Namespace):
     end_date = date(year=end_year, month=end_month, day=1)
 
     removed_posts_humans = mod_action_service.count_mod_actions(
-        "removelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "removelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
     removed_posts_humans += mod_action_service.count_mod_actions(
-        "spamlink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "spamlink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
 
     removed_posts_bots = mod_action_service.count_mod_actions(
-        "removelink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+        "removelink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
+    )
     removed_posts_bots += mod_action_service.count_mod_actions(
-        "spamlink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+        "spamlink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
+    )
 
     removed_posts_total = mod_action_service.count_mod_actions(
-        "removelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
+        "removelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS
+    )
     removed_posts_total += mod_action_service.count_mod_actions(
-        "spamlink", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
+        "spamlink", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS
+    )
 
     removed_comments_humans = mod_action_service.count_mod_actions(
-        "removecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "removecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
     removed_comments_humans += mod_action_service.count_mod_actions(
-        "spamcomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "spamcomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
 
     removed_comments_bots = mod_action_service.count_mod_actions(
-        "removecomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+        "removecomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
+    )
     removed_comments_bots += mod_action_service.count_mod_actions(
-        "spamcomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS)
+        "spamcomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
+    )
 
     removed_comments_total = mod_action_service.count_mod_actions(
-        "removecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
+        "removecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS
+    )
     removed_comments_total += mod_action_service.count_mod_actions(
-        "spamcomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS)
+        "spamcomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS
+    )
 
     approved_posts = mod_action_service.count_mod_actions(
-        "approvelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "approvelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
     approved_comments = mod_action_service.count_mod_actions(
-        "approvecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "approvecomment", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
     distinguished_comments = mod_action_service.count_mod_actions(
-        "distinguish", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "distinguish", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
 
     banned_users = mod_action_service.count_mod_actions(
-        "banuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "banuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
     permabanned_users = mod_action_service.count_mod_actions(
-        "banuser", start_date, end_date, distinct=True, details="permanent", exclude_mod_accounts_list=_bots_and_admins)
+        "banuser", start_date, end_date, distinct=True, details="permanent", exclude_mod_accounts_list=_bots_and_admins
+    )
     unbanned_users = mod_action_service.count_mod_actions(
-        "unbanuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins)
+        "unbanuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+    )
 
     admin_removed_posts = mod_action_service.count_mod_actions(
-        "removelink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.ADMINS)
+        "removelink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.ADMINS
+    )
     admin_removed_comments = mod_action_service.count_mod_actions(
-        "removecomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.ADMINS)
+        "removecomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.ADMINS
+    )
 
     meta_message = f"""Monthly Report – {start_date.strftime("%B %Y")}:
 ```* Removed posts: {removed_posts_humans} by moderators, {removed_posts_bots} by bots, {removed_posts_total} distinct
@@ -95,9 +115,7 @@ def _report_monthly(report_args: argparse.Namespace):
 
 def _get_parser() -> argparse.ArgumentParser:
     new_parser = argparse.ArgumentParser(description="Runs reports against the database")
-    new_parser.add_argument(
-        "name", help="Name of the report to run.", choices=["monthly"]
-    )
+    new_parser.add_argument("name", help="Name of the report to run.", choices=["monthly"])
     new_parser.add_argument(
         "-d",
         "--date",
@@ -107,9 +125,7 @@ def _get_parser() -> argparse.ArgumentParser:
     return new_parser
 
 
-_reports = {
-    "monthly": _report_monthly
-}
+_reports = {"monthly": _report_monthly}
 
 
 if __name__ == "__main__":

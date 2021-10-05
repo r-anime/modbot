@@ -9,13 +9,7 @@ from data.base_data import BaseModel, BaseData
 class SnapshotModel(BaseModel):
     _table = "snapshots"
     _pk_field = "id"
-    _columns = [
-        "id",
-        "created_time",
-        "date",
-        "hour",
-        "subscribers"
-    ]
+    _columns = ["id", "created_time", "date", "hour", "subscribers"]
 
     def set_date_and_hour(self, start_datetime: datetime.datetime):
         """Sets the date and hour on the model, rounding down from the provided start_datetime.
@@ -33,16 +27,10 @@ class SnapshotModel(BaseModel):
 class SnapshotFrontpageModel(BaseModel):
     _table = "snapshot_frontpage"
     _pk_field = "snapshot_id"
-    _columns = [
-        "post_id",
-        "snapshot_id",
-        "rank",
-        "score"
-    ]
+    _columns = ["post_id", "snapshot_id", "rank", "score"]
 
 
 class SnapshotData(BaseData):
-
     def get_snapshot_by_datetime(self, target_datetime: datetime.datetime) -> Optional[SnapshotModel]:
         """Gets the snapshot for the date and hour, rounding down from the provided start_datetime.
         Assumes UTC if no timezone provided."""
