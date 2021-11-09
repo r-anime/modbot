@@ -1,3 +1,12 @@
+"""
+Unarchived Comments
+
+Admins enabled commenting on old posts that used to be archived after 6 months, details here: https://redd.it/py2xy2
+We trialed this, then began archiving threads again after 16 days and gathered information on comments and users that
+posted on old threads in this time. Results of this script posted in the meta thread:
+https://www.reddit.com/r/anime/comments/qocky5/-/hjm4hvs/
+"""
+
 from sqlalchemy.sql import text
 
 from services import post_service, comment_service
