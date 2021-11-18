@@ -22,6 +22,17 @@ def get_comment_by_id(comment_id: Union[str, int]) -> Optional[CommentModel]:
     return _comment_data.get_comment_by_id(comment_id)
 
 
+def get_comments_by_post_id(post_id: Union[str, int]) -> list[CommentModel]:
+    """
+    Get all comments on the specified post. post_id is either base 10 (int) or base 36 (str)
+    """
+
+    if isinstance(post_id, str):
+        post_id = base36decode(post_id)
+
+    return _comment_data.get_comments_by_post_id(post_id)
+
+
 def add_comment(reddit_comment: Comment) -> CommentModel:
     """
     Parses some basic information for a comment and adds it to the database.
