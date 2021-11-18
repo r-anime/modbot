@@ -44,3 +44,14 @@ class CommentData(BaseData):
             return None
 
         return CommentModel(result_rows[0])
+
+    def get_comments_by_post_id(self, post_id: int) -> list[CommentModel]:
+        sql = text(
+            """
+            SELECT * FROM comments
+            WHERE post_id = :post_id;
+            """
+        )
+
+        result_rows = self.execute(sql, post_id=post_id)
+        return [CommentModel(row) for row in result_rows]
