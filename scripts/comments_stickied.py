@@ -5,6 +5,7 @@ Gets numbers of comments on posts while the posts were stickied (pinned) compare
 Useful for analyzing how much activity a weekly thread will get when not stickied.
 """
 
+import argparse
 from datetime import datetime, timezone, timedelta
 
 from sqlalchemy.sql import text
@@ -17,12 +18,16 @@ _post_data = post_service.PostData()
 _mod_action_data = mod_action_service.ModActionData()
 
 
-def get_comments_in_period(post: post_service.PostModel, start_time: datetime, end_time: datetime) -> list[comment_service.CommentModel]:
-    sql = text("""
+def get_comments_in_period(
+    post: post_service.PostModel, start_time: datetime, end_time: datetime
+) -> list[comment_service.CommentModel]:
+    sql = text(
+        """
     select comments.* from comments join posts p on comments.post_id = p.id
     where comments.post_id = :post_id and
     comments.created_time >= :start and comments.created_time < :end;
-    """)
+    """
+    )
 
     rows = _comment_data.execute(sql, post_id=post.id, start=start_time, end=end_time)
     comment_list = [comment_service.CommentModel(row) for row in rows]
@@ -34,12 +39,14 @@ def get_post_sticky_times(post: post_service.PostModel) -> list[tuple]:
     """Get each time a post was stickied/unstickied. Returns a list of tuples with sticky/unsticky times."""
 
     logger.debug(f"Getting sticky times for {post.id36}")
-    sql = text("""
+    sql = text(
+        """
     select * from mod_actions
     where target_post_id = :post_id and target_comment_id is null
     and action in ('sticky', 'unsticky')
     order by created_time;
-    """)
+    """
+    )
     rows = _mod_action_data.execute(sql, post_id=post.id)
     action_list = [mod_action_service.ModActionModel(row) for row in rows]
 
@@ -47,7 +54,7 @@ def get_post_sticky_times(post: post_service.PostModel) -> list[tuple]:
     start_time = None
     while action_list:
         action = action_list.pop(0)
-        if action.action == 'sticky':
+        if action.action == "sticky":
             if start_time:  # shouldn't get here, was already just stickied?
                 logger.warning(f"Post {post.id36} was stickied twice in a row?")
                 continue
@@ -76,13 +83,15 @@ def get_weekly_posts(start_date: datetime = None, end_date: datetime = None) -> 
     if not end_date:
         end_date = datetime.now(tz=timezone.utc)
 
-    sql = text(f"""
+    sql = text(
+        """
     select * from posts
     where flair_text = 'Weekly' and author in ('AutoModerator', 'AnimeMod')
     and created_time >= :start and created_time < :end
     and removed is false
     order by created_time;
-    """)
+    """
+    )
 
     rows = _post_data.execute(sql, start=start_date, end=end_date)
     post_list = [post_service.PostModel(row) for row in rows]
@@ -110,7 +119,7 @@ def process_posts(posts: list[post_service.PostModel]):
         sticky_times = get_post_sticky_times(post)
         sticky_time_total = timedelta()
         for period in sticky_times:
-            sticky_time_total += (period[1] - period[0])
+            sticky_time_total += period[1] - period[0]
             comments = get_comments_in_period(post, period[0], period[1])
             sticky_time_comments.extend(comments)
 
@@ -145,7 +154,7 @@ def process_posts(posts: list[post_service.PostModel]):
             len(sticky_time_comments),
             len(top_level_sticky),
             len(non_sticky_comments),
-            len(top_level_unsticky)
+            len(top_level_unsticky),
         )
         post_calculated_stats.append(stats)
 
@@ -153,6 +162,10 @@ def process_posts(posts: list[post_service.PostModel]):
 
 
 def main(start_date: datetime = None, end_date: datetime = None):
+    if not start_date.tzname():
+        start_date = start_date.replace(tzinfo=timezone.utc)
+    if not end_date.tzname():
+        end_date = end_date.replace(tzinfo=timezone.utc)
     # get all weekly posts
     if not start_date or start_date < datetime(2021, 6, 1, tzinfo=timezone.utc):
         start_date = datetime(2021, 6, 1, tzinfo=timezone.utc)
@@ -165,11 +178,20 @@ def main(start_date: datetime = None, end_date: datetime = None):
         "rec": filter(lambda p: p.title.startswith("Recommendation Tuesdays"), posts),
         "merch": filter(lambda p: p.title.startswith("Merch Mondays"), posts),
         "disc": filter(lambda p: "Thursday Anime Discussion Thread" in p.title, posts),
-        "review": filter(lambda p: p.title.startswith("The /r/anime Week in Review"), posts)
+        "review": filter(lambda p: p.title.startswith("The /r/anime Week in Review"), posts),
     }
 
-    csv_headers = ("post_id", "post_title", "sticky_hours", "comments_total", "comments_during_week",
-                   "comments_sticky", "comments_sticky_top_level", "comments_unsticky", "comments_unsticky_top_level")
+    csv_headers = (
+        "post_id",
+        "post_title",
+        "sticky_hours",
+        "comments_total",
+        "comments_during_week",
+        "comments_sticky",
+        "comments_sticky_top_level",
+        "comments_unsticky",
+        "comments_unsticky_top_level",
+    )
     csv_data = [csv_headers]
     for post_list in posts_by_title.values():
         posts_stats = process_posts(post_list)
@@ -179,7 +201,24 @@ def main(start_date: datetime = None, end_date: datetime = None):
     logger.info(csv_str)
 
 
+def _get_parser() -> argparse.ArgumentParser:
+    new_parser = argparse.ArgumentParser(description="Count comments in weekly threads.")
+    new_parser.add_argument(
+        "-s",
+        "--start_date",
+        type=lambda d: datetime.fromisoformat(d),
+        help="Thread creation date to start at (ISO 8601 format).",
+    )
+    new_parser.add_argument(
+        "-e",
+        "--end_date",
+        type=lambda d: datetime.fromisoformat(d),
+        help="Thread creation date to end at (ISO 8601 format).",
+    )
+    return new_parser
+
+
 if __name__ == "__main__":
-    start = datetime(2021, 6, 1, tzinfo=timezone.utc)
-    end = datetime(2021, 11, 1, tzinfo=timezone.utc)
-    main(start, end)
+    parser = _get_parser()
+    args = parser.parse_args()
+    main(args.start_date, args.end_date)
