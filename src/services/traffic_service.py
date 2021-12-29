@@ -15,7 +15,7 @@ def add_daily_traffic(
     traffic.date = target_date
     traffic.unique_pageviews = unique_pageviews
     traffic.total_pageviews = total_pageviews
-    traffic.subscribers = subscribers
+    traffic.net_subscribers = subscribers
 
     saved_traffic = _traffic_data.insert(traffic)
     return saved_traffic
@@ -88,5 +88,5 @@ def update_daily_traffic(traffic_data: list[list[int]]):
             current_traffic.unique_pageviews = unique_pageviews
         if total_pageviews != 0:
             current_traffic.total_pageviews = total_pageviews
-        current_traffic.subscribers = subscribers
+        current_traffic.net_subscribers = subscribers
         _traffic_data.update(current_traffic)

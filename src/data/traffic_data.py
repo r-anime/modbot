@@ -19,7 +19,7 @@ class TrafficMonthlyModel(BaseModel):
 class TrafficDailyModel(BaseModel):
     _table = "traffic_daily"
     _pk_field = "id"
-    _columns = ["id", "date", "unique_pageviews", "total_pageviews", "subscribers"]
+    _columns = ["id", "date", "unique_pageviews", "total_pageviews", "net_subscribers"]
 
 
 class TrafficData(BaseData):
