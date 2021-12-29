@@ -40,8 +40,6 @@ def upgrade():
 def downgrade():
     op.execute(
         """
-    ALTER TABLE snapshots DROP COLUMN IF EXISTS total_comments;
-    ALTER TABLE snapshots DROP COLUMN IF EXISTS total_posts;
     ALTER TABLE snapshots DROP COLUMN IF EXISTS total_pageviews;
     ALTER TABLE snapshots DROP COLUMN IF EXISTS unique_pageviews;
 
