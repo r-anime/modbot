@@ -1,6 +1,7 @@
 """
 Gathers a snapshot of the front page of a subreddit, designed to be run at the top of each hour (currently via cron).
 Saves posts and their rank in a database to provide changes from the previous hour and how long a post has been there.
+Also collects traffic for the sub provided by the API.
 """
 
 from collections import Counter
@@ -11,7 +12,7 @@ import praw
 import config_loader
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
-from services import snapshot_service
+from services import snapshot_service, traffic_service
 
 
 def _format_line(submission, position, rank_change, total_hours):
@@ -39,6 +40,17 @@ def _format_line(submission, position, rank_change, total_hours):
     line += f" <{reddit_utils.slug(submission)}>"
 
     return line
+
+
+def update_traffic(subreddit):
+    traffic = subreddit.traffic()
+
+    if "month" in traffic:
+        traffic_service.update_monthly_traffic(traffic["month"])
+    if "day" in traffic:
+        traffic_service.update_daily_traffic(traffic["day"])
+    if "hour" in traffic:
+        snapshot_service.update_hourly_traffic(traffic["hour"])
 
 
 def check_front_page(subreddit):
@@ -121,3 +133,4 @@ if __name__ == "__main__":
     reddit = praw.Reddit(**config_loader.REDDIT["auth"])
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
     check_front_page(subreddit)
+    update_traffic(subreddit)

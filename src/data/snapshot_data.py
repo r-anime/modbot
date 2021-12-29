@@ -9,7 +9,7 @@ from data.base_data import BaseModel, BaseData
 class SnapshotModel(BaseModel):
     _table = "snapshots"
     _pk_field = "id"
-    _columns = ["id", "created_time", "date", "hour", "subscribers"]
+    _columns = ["id", "created_time", "date", "hour", "unique_pageviews", "total_pageviews", "subscribers"]
 
     def set_date_and_hour(self, start_datetime: datetime.datetime):
         """Sets the date and hour on the model, rounding down from the provided start_datetime.
@@ -23,6 +23,11 @@ class SnapshotModel(BaseModel):
         self.date = copy_datetime.date()
         self.hour = copy_datetime.hour
 
+    def get_datetime(self):
+        return datetime.datetime(
+            self.date.year, self.date.month, self.date.day, self.hour, tzinfo=datetime.timezone.utc
+        )
+
 
 class SnapshotFrontpageModel(BaseModel):
     _table = "snapshot_frontpage"
@@ -31,6 +36,25 @@ class SnapshotFrontpageModel(BaseModel):
 
 
 class SnapshotData(BaseData):
+    def get_snapshots_by_date_range(self, start_date: datetime.date, end_date: datetime.date) -> list[SnapshotModel]:
+        """Gets the snapshots that exist between the dates specified (inclusive)."""
+
+        start_date_str = start_date.isoformat()
+        end_date_str = end_date.isoformat()
+
+        sql = text(
+            """
+        SELECT * FROM snapshots
+        WHERE date >= :start_date and date <= :end_date;
+        """
+        )
+
+        result_rows = self.execute(sql, start_date=start_date_str, end_date=end_date_str)
+        if not result_rows:
+            return []
+
+        return [SnapshotModel(row) for row in result_rows]
+
     def get_snapshot_by_datetime(self, target_datetime: datetime.datetime) -> Optional[SnapshotModel]:
         """Gets the snapshot for the date and hour, rounding down from the provided start_datetime.
         Assumes UTC if no timezone provided."""

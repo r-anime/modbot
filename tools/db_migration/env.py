@@ -27,7 +27,7 @@ target_metadata = None
 # ... etc.
 db_user_str = f'{os.environ.get("DB_USER", "postgres")}:{os.environ.get("DB_PASSWORD", "postgres")}'
 db_host_str = f'{os.environ.get("DB_HOST", "modbot-db")}:{os.environ.get("DB_POST", 5432)}'
-db_connection_str = f'postgres+psycopg2://{db_user_str}@{db_host_str}/{os.environ.get("DB_NAME", "postgres")}'
+db_connection_str = f'postgresql+psycopg2://{db_user_str}@{db_host_str}/{os.environ.get("DB_NAME", "postgres")}'
 config.set_main_option("sqlalchemy.url", db_connection_str)
 
 
