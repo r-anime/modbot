@@ -83,9 +83,7 @@ def load_post_list_file(archive_file_path: str):
 
 def _get_parser() -> argparse.ArgumentParser:
     new_parser = argparse.ArgumentParser(description="Archive posts and comments in them.")
-    new_parser.add_argument(
-        "--file", action="store", help="File path to list of post URLs to archive."
-    )
+    new_parser.add_argument("--file", action="store", help="File path to list of post URLs to archive.")
     return new_parser
 
 
