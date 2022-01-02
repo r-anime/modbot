@@ -62,7 +62,7 @@ def send_new_submission_message(submission: Submission):
         "timestamp": datetime.fromtimestamp(submission.created_utc, timezone.utc).isoformat(),
         "footer": {"text": f"{submission.id} | {submission.link_flair_text}"},
         "fields": [],
-        "color": flair_colors.get(submission.link_flair_text, 0),
+        "color": flair_colors.get(submission.link_flair_template_id, 0),
     }
 
     # Link posts include a direct link to the thing submitted as well.
@@ -100,7 +100,7 @@ def load_post_flairs():
     flair_list = subreddit.flair.link_templates
     for flair in flair_list:
         color_hex = flair["background_color"].replace("#", "")
-        flair_colors[flair["text"]] = int(color_hex, base=16)
+        flair_colors[flair["id"]] = int(color_hex, base=16)
 
 
 def monitor_stream():
