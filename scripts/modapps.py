@@ -5,6 +5,7 @@ One caveat is that the username field must be sanitized (i.e. ensured valid) in 
 """
 
 
+import argparse
 import csv
 from datetime import datetime, timedelta
 import re
@@ -12,19 +13,16 @@ import re
 import praw
 
 import config_loader
+from services import comment_service, post_service, mod_action_service
 
 
-response_dump_thread_id = ""  # TODO: take thread id as script arg... or create one (with title as arg)?
-app_announcement_datetime = datetime(2020, 6, 16, 20, 38, 5)  # TODO: take datetime or app thread id as script arg
-activity_window_datetime = app_announcement_datetime - timedelta(days=90)
-csv_file_path = "apps.csv"  # TODO: make script arg
 username_key = "What is your Reddit username?"
 
 
 reddit = praw.Reddit(**config_loader.REDDIT["auth"])
 
 
-def process_row(row):
+def process_row(row, activity_start_date, activity_end_date):
     """
     Turns a response row into a list of one or more strings to be posted as comments.
 
@@ -37,25 +35,33 @@ def process_row(row):
 
     response_body = f"### {username_key}\n\n> https://www.reddit.com/user/{username}\n\n"
 
-    # TODO: rework to not use PSAW since that broke.
     # Get the activity of the user both in the 90-day window prior to the posting of applications (as specified)
     # and overall history on /r/anime.
-    # user_activity_window = psaw_api.redditor_subreddit_activity(
-    #     username,
-    #     before=app_announcement_datetime,
-    #     after=activity_window_datetime)
-    # user_comments_window = user_activity_window['comment']['anime']
-    # user_submissions_window = user_activity_window['submission']['anime']
-    #
-    # user_activity_total = psaw_api.redditor_subreddit_activity(username)
-    # user_comments_total = user_activity_total['comment']['anime']
-    # user_submissions_total = user_activity_total['submission']['anime']
-    #
-    # passes_activity_threshold = '✅' if user_comments_window + user_submissions_window > 50 else '❌'
-    #
-    # response_body += f"### Activity in past 90 days {passes_activity_threshold}\n\n"
-    # response_body += f"> Comments: {user_comments_window} ({user_comments_total} total)"
-    # response_body += f" Submissions: {user_submissions_window} ({user_submissions_total} total)\n\n"
+    activity_start_time_str = activity_start_date.isoformat()
+    activity_end_time_str = activity_end_date.isoformat()
+    user_comments_window = len(
+        comment_service.get_comments_by_username(username, activity_start_time_str, activity_end_time_str)
+    )
+    user_posts_window = len(
+        post_service.get_posts_by_username(username, activity_start_time_str, activity_end_time_str)
+    )
+    user_targeted_mod_actions = mod_action_service.get_mod_actions_targeting_username(username, start_date="2021-01-01")
+    mod_actions = {}
+    for mod_action in user_targeted_mod_actions:
+        if mod_action.action not in mod_actions:
+            mod_actions[mod_action.action] = []
+        mod_actions[mod_action.action].append(mod_action)
+    mod_actions_str = ", ".join(f"{action} ({len(action_list)})" for action, action_list in mod_actions.items())
+
+    user_comments_total = len(comment_service.get_comments_by_username(username, "2021-06-01"))
+    user_posts_total = len(post_service.get_posts_by_username(username, "2021-06-01"))
+
+    passes_activity_threshold = "✅" if user_comments_window + user_posts_window > 50 else "❌"
+
+    response_body += f"### Activity in past 90 days {passes_activity_threshold}\n\n"
+    response_body += f"> Comments: {user_comments_window} ({user_comments_total} since 2021-06-01)"
+    response_body += f" Submissions: {user_posts_window} ({user_posts_total} since 2021-06-01)\n\n"
+    response_body += f"> Mod actions since 2021-01-01: {mod_actions_str}\n\n"
 
     redditor = reddit.redditor(username)
     other_subs = redditor.moderated()
@@ -109,14 +115,35 @@ def process_row(row):
     return response_parts
 
 
+def _get_parser() -> argparse.ArgumentParser:
+    new_parser = argparse.ArgumentParser(description="Post mod applications to a thread.")
+    new_parser.add_argument("--post_id", required=True, type=str, help="Thread ID to post comments to.")
+    new_parser.add_argument(
+        "-d",
+        "--date",
+        required=True,
+        type=lambda d: datetime.fromisoformat(d),
+        help="Date that mod apps opened on (ISO 8601 format).",
+    )
+    new_parser.add_argument("-f", "--file", required=True, type=str, help="CSV file to load applications from.")
+    return new_parser
+
+
 def main():
+    parser = _get_parser()
+    args = parser.parse_args()
+
+    response_dump_thread_id = args.post_id
+    app_announcement_datetime = args.date
+    activity_window_datetime = app_announcement_datetime - timedelta(days=90)
+
     thread = reddit.submission(id=response_dump_thread_id)
 
     # read CSV
-    with open(csv_file_path, newline="") as csv_file:
+    with open(args.file, newline="") as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
-            comment_list = process_row(row)
+            comment_list = process_row(row, activity_window_datetime, app_announcement_datetime)
             top_level = thread.reply(comment_list[0])
             for comment_str in comment_list[1:]:
                 top_level.reply(comment_str)

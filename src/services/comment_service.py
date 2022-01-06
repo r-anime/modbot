@@ -33,6 +33,14 @@ def get_comments_by_post_id(post_id: Union[str, int]) -> list[CommentModel]:
     return _comment_data.get_comments_by_post_id(post_id)
 
 
+def get_comments_by_username(username: str, start_date: str = None, end_date: str = None) -> list[CommentModel]:
+    """
+    Gets all comments by a user, optionally within a specified time frame.
+    """
+
+    return _comment_data.get_comments_by_username(username, start_date, end_date)
+
+
 def add_comment(reddit_comment: Comment) -> CommentModel:
     """
     Parses some basic information for a comment and adds it to the database.

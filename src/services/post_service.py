@@ -21,6 +21,14 @@ def get_post_by_id(post_id: Union[str, int]) -> Optional[PostModel]:
     return _post_data.get_post_by_id(post_id)
 
 
+def get_posts_by_username(username: str, start_date: str = None, end_date: str = None) -> list[PostModel]:
+    """
+    Gets all posts by a user, optionally within a specified time frame.
+    """
+
+    return _post_data.get_posts_by_username(username, start_date, end_date)
+
+
 def add_post(reddit_post: Submission) -> PostModel:
     """
     Parses some basic information for a post and adds it to the database.
