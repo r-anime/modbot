@@ -55,3 +55,29 @@ class CommentData(BaseData):
 
         result_rows = self.execute(sql, post_id=post_id)
         return [CommentModel(row) for row in result_rows]
+
+    def get_comments_by_username(
+        self, username: str, start_date: str = None, end_date: str = None
+    ) -> list[CommentModel]:
+        where_clauses = ["lower(author) = :username"]
+        sql_kwargs = {"username": username.lower()}
+
+        if start_date:
+            where_clauses.append("created_time >= :start_date")
+            sql_kwargs["start_date"] = start_date
+
+        if end_date:
+            where_clauses.append("created_time < :end_date")
+            sql_kwargs["end_date"] = end_date
+
+        where_str = " AND ".join(where_clauses)
+
+        sql = text(
+            f"""
+        SELECT * FROM comments
+        WHERE {where_str};
+        """
+        )
+
+        result_rows = self.execute(sql, **sql_kwargs)
+        return [CommentModel(row) for row in result_rows]

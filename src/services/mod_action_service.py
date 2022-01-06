@@ -18,6 +18,16 @@ def get_mod_action_by_id(mod_action_id: str) -> Optional[ModActionModel]:
     return _mod_action_data.get_mod_action_by_id(mod_action_id)
 
 
+def get_mod_actions_targeting_username(
+    username: str, actions: list[str] = None, start_date: str = None, end_date: str = None
+) -> list[ModActionModel]:
+    """
+    Gets all mod actions against a user, optionally only specific actions within a specified time frame.
+    """
+
+    return _mod_action_data.get_mod_actions_targeting_username(username, actions, start_date, end_date)
+
+
 def add_mod_action(reddit_mod_action: ModAction) -> ModActionModel:
     """
     Parses some basic information for a mod action and adds it to the database.

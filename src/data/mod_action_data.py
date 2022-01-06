@@ -36,6 +36,36 @@ class ModActionData(BaseData):
 
         return ModActionModel(result_rows[0])
 
+    def get_mod_actions_targeting_username(
+        self, username: str, actions: list[str] = None, start_date: str = None, end_date: str = None
+    ) -> list[ModActionModel]:
+        where_clauses = ["lower(target_user) = :username"]
+        sql_kwargs = {"username": username.lower()}
+
+        if actions:
+            where_clauses.append("action in (:actions_str)")
+            sql_kwargs["actions_str"] = ",".join(actions)
+
+        if start_date:
+            where_clauses.append("created_time >= :start_date")
+            sql_kwargs["start_date"] = start_date
+
+        if end_date:
+            where_clauses.append("created_time < :end_date")
+            sql_kwargs["end_date"] = end_date
+
+        where_str = " AND ".join(where_clauses)
+
+        sql = text(
+            f"""
+        SELECT * FROM mod_actions
+        WHERE {where_str};
+        """
+        )
+
+        result_rows = self.execute(sql, **sql_kwargs)
+        return [ModActionModel(row) for row in result_rows]
+
     def count_mod_actions(
         self,
         action: str,
