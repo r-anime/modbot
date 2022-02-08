@@ -9,6 +9,7 @@ import praw
 from praw.models.reddit.submission import Submission
 
 import config_loader
+from processors.posts import flair_processor
 from services import post_service, base_data_service
 from utils import discord
 from utils.logger import logger
@@ -29,7 +30,6 @@ def process_post(submission: Submission):
     post = post_service.get_post_by_id(submission.id)
     if post and post.sent_to_feed:
         logger.debug(f"Already processed, skipping post {submission.id}")
-        return
 
     author_name = submission.author.name if submission.author is not None else "[deleted]"
     logger.info(f"Processing post {submission.id} - /u/{author_name} - {submission.link_flair_text}")
@@ -39,10 +39,12 @@ def process_post(submission: Submission):
     else:
         post = post_service.add_post(submission)
 
-    send_new_submission_message(submission)
-    post.sent_to_feed = True
+    if not post.sent_to_feed:
+        send_new_submission_message(submission)
+        post.sent_to_feed = True
+        post = base_data_service.update(post)
 
-    base_data_service.update(post)
+    flair_processor.check_flair.delay(post.to_dict())
 
     logger.debug(f"Finished processing {submission.id}")
 

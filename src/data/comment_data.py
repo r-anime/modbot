@@ -29,6 +29,9 @@ class CommentModel(BaseModel):
         self.id = base36decode(id_base36)
         self.id36 = id_base36
 
+    def __str__(self):
+        return f'<{self.__class__.__name__}: {getattr(self, "id36", None)} by {getattr(self, "author", None)}>'
+
 
 class CommentData(BaseData):
     def get_comment_by_id(self, comment_id: int) -> Optional[CommentModel]:

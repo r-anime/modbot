@@ -10,6 +10,13 @@ services:
       - "5432:5432"
     restart: unless-stopped
 
+  redis:
+    container_name: modbot-redis
+    image: redis:6.2
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   new_posts:
     container_name: modbot-new-posts
     depends_on:
@@ -46,6 +53,17 @@ services:
       template.env
     build: .
     command: python3 sub_mentions.py
+    restart: unless-stopped
+
+  worker:
+    container_name: modbot-worker
+    depends_on:
+      - db
+      - redis
+    env_file:
+      template.env
+    build: .
+    command: celery -A utils.celery_worker worker
     restart: unless-stopped
 
   tools:

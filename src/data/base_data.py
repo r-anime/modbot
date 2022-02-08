@@ -26,7 +26,7 @@ class BaseModel:
     # Columns that have been modified, with new values.
     _modified = {}
 
-    def __init__(self, row: Row = None, lazy: bool = True):
+    def __init__(self, row: Union[Row, dict] = None, lazy: bool = True):
         self._row = row
 
         # If we're not lazy loading, load all columns at once.
@@ -74,6 +74,18 @@ class BaseModel:
     @property
     def columns(self):
         return self._columns
+
+    def to_dict(self) -> dict:
+        """
+        Transforms model instance into dict (e.g. for serialization)
+        """
+
+        self_dict = {}
+
+        for column in self._columns:
+            self_dict[column] = getattr(self, column)
+
+        return self_dict
 
     def load(self):
         """

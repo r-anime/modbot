@@ -32,6 +32,9 @@ class PostModel(BaseModel):
         self.id = base36decode(id_base36)
         self.id36 = id_base36
 
+    def __str__(self):
+        return f'<{self.__class__.__name__}: {getattr(self, "id36", None)} by {getattr(self, "author", None)}>'
+
 
 class PostData(BaseData):
     def get_post_by_id(self, post_id: int) -> Optional[PostModel]:

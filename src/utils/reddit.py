@@ -1,7 +1,16 @@
 """Utilities regarding Reddit posts/users/etc"""
 
+from typing import Optional
+
+import praw
+from praw.models.reddit.subreddit import Subreddit
+
+import config_loader
 from data.base_data import BaseModel
 
+
+reddit: Optional[praw.Reddit] = None
+subreddit: Optional[Subreddit] = None
 
 _b36_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
 
@@ -53,3 +62,13 @@ def make_permalink(model: BaseModel) -> str:
         return base_url + f"/user/{model.username}"
 
     raise TypeError(f"Unknown model {model.__class__}")
+
+
+def initialize_reddit():
+    global reddit, subreddit
+    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+
+
+if reddit is None:
+    initialize_reddit()

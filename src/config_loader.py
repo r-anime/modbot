@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+DEBUG_MODE = (os.environ.get("DEBUG_MODE", "False").lower() in ["true", "t", "1", "yes", "y"],)  # load as bool
+
 REDDIT = {
     "subreddit": os.environ.get("SUBREDDIT_NAME_TO_ACT_ON"),
     "auth": {
@@ -25,6 +27,8 @@ DB_CONNECTION = (
     f'postgresql+psycopg2://{os.environ.get("DB_USER")}:{os.environ.get("DB_PASSWORD")}@'
     f'{os.environ.get("DB_HOST")}:{os.environ.get("DB_PORT")}/{os.environ.get("DB_NAME")}'
 )
+
+REDIS_CONNECTION = f'redis://{os.environ.get("REDIS_HOST")}:{os.environ.get("REDIS_PORT")}/0'
 
 DISCORD = {
     "enabled": os.environ.get("DISCORD_ENABLED", "False").lower() in ["true", "t", "1", "yes", "y"],  # load as bool
