@@ -24,3 +24,6 @@ MOD_ACTIONS_COMMENTS = [
 ]
 
 MOD_ACTIONS_USERS = ["acceptmoderatorinvite", "banuser", "invitemoderator", "removemoderator", "unbanuser"]
+
+# List of actions that should always trigger a notification.
+MOD_ACTIONS_ALWAYS_NOTIFY = ["acceptmoderatorinvite", "invitemoderator", "removemoderator"]
