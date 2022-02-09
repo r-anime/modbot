@@ -99,8 +99,8 @@ def parse_mod_action(mod_action: ModAction):
             base_data_service.update(user)
         elif mod_action.action == "removemoderator":
             logger.debug(f"Updating mod status for {user}")
-            mod_user.moderator = False
-            base_data_service.update(mod_user)
+            user.moderator = False
+            base_data_service.update(user)
             _get_moderators()
 
     # See if the post targeted by this action exists in the system, add it if not.
