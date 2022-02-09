@@ -11,6 +11,7 @@ import praw
 from praw.models.mod_action import ModAction
 
 import config_loader
+from constants import mod_constants
 from data.mod_action_data import ModActionModel
 from services import base_data_service, comment_service, mod_action_service, post_service, user_service
 from utils import discord, reddit as reddit_utils
@@ -45,6 +46,9 @@ def parse_mod_action(mod_action: ModAction):
     # If there's an action by an unknown moderator or admin, make a note of it and check to see
     # if they should be added to the mod list.
     send_notification = False
+    if mod_action.action in mod_constants.MOD_ACTIONS_ALWAYS_NOTIFY:
+        send_notification = True
+
     if mod_action.mod.name not in active_mods:
         # Add them to the database if necessary.
         mod_user = user_service.get_user(mod_action.mod.name)
@@ -93,6 +97,11 @@ def parse_mod_action(mod_action: ModAction):
         elif mod_action.action == "unbanuser":
             user.banned_until = None
             base_data_service.update(user)
+        elif mod_action.action == "removemoderator":
+            logger.debug(f"Updating mod status for {user}")
+            mod_user.moderator = False
+            base_data_service.update(mod_user)
+            _get_moderators()
 
     # See if the post targeted by this action exists in the system, add it if not.
     if mod_action.target_fullname and mod_action.target_fullname.startswith("t3_"):
