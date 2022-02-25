@@ -58,10 +58,13 @@ def parse_mod_action(mod_action: ModAction):
         # We'd normally send a notification for all actions from non-mods, but temporary mutes expiring
         # always come from reddit and we don't really care about those.
         # Similarly, crowd control removals as those are filtered to the mod queue.
-        if not (mod_action.mod.name == "reddit" and mod_action.action == "unmuteuser") or (
-            mod_action.mod.name == "reddit"
-            and mod_action.action in ("removecomment", "removelink")
-            and mod_action.details == "Crowd Control"
+        if not (
+            (mod_action.mod.name == "reddit" and mod_action.action == "unmuteuser")
+            or (
+                mod_action.mod.name == "reddit"
+                and mod_action.action in ("removecomment", "removelink")
+                and mod_action.details == "Crowd Control"
+            )
         ):
             send_notification = True
 
