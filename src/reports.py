@@ -100,6 +100,19 @@ def _report_monthly(report_args: argparse.Namespace):
         "removecomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.ADMINS
     )
 
+    # Adjust numbers based on crowd control filter.
+    crowd_control_removed_comments = mod_action_service.count_mod_actions(
+        "removecomment", start_date, end_date, distinct=True, details="Crowd Control", mod_accounts_list=["reddit"]
+    )
+    admin_removed_comments -= crowd_control_removed_comments
+    removed_comments_bots += crowd_control_removed_comments
+
+    crowd_control_removed_posts = mod_action_service.count_mod_actions(
+        "removelink", start_date, end_date, distinct=True, details="Crowd Control", mod_accounts_list=["reddit"]
+    )
+    admin_removed_posts -= crowd_control_removed_posts
+    removed_posts_bots += crowd_control_removed_posts
+
     meta_message = f"""Monthly Report – {start_date.strftime("%B %Y")}:
 ```* Removed posts: {removed_posts_humans} by moderators, {removed_posts_bots} by bots, {removed_posts_total} distinct
 * Removed comments: {removed_comments_humans} by moderators, {removed_comments_bots} by bots, {removed_comments_total} distinct
