@@ -3,6 +3,7 @@ Saves old posts and comments into the database. Use with -h for instructions.
 """
 
 import argparse
+from datetime import datetime
 import time
 
 import praw
@@ -13,12 +14,13 @@ from services import post_service, comment_service
 from utils.logger import logger
 
 
-# Current reddit session and subreddit, initialized when first starting up or after an error.
+# Current reddit session, subreddit, and Pushshift API client, initialized when first starting up or after an error.
 reddit = None
 subreddit = None
+ps_api = None
 
 
-def save_post_and_comments(reddit_submission: Submission):
+def save_post_and_comments(reddit_submission: Submission, pushshift_submission=None):
     """
     Saves a single reddit post and its comments to the database.
     """
@@ -57,6 +59,18 @@ def save_post_and_comments(reddit_submission: Submission):
     logger.info(f"Finished processing {post_name}, total {index + 1} comments")
 
 
+def load_post_by_id(post_id: str):
+    global reddit, subreddit
+    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+    reddit_submission = reddit.submission(id=post_id)
+    if reddit_submission.subreddit_name_prefixed != subreddit.display_name_prefixed:
+        logger.info(f"Post {post_id} is not on {subreddit.display_name_prefixed}, skipping...")
+        return
+
+    save_post_and_comments(reddit_submission)
+
+
 def load_post_list_file(archive_file_path: str):
     """
     Saves all posts and their comments into the database from the list of post URLs in the specified file.
@@ -81,9 +95,32 @@ def load_post_list_file(archive_file_path: str):
             time.sleep(30)
 
 
+def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bool = True):
+    """
+    Saves all posts made in the specified time frame and their comments.
+    """
+    pass
+
+
 def _get_parser() -> argparse.ArgumentParser:
     new_parser = argparse.ArgumentParser(description="Archive posts and comments in them.")
     new_parser.add_argument("--file", action="store", help="File path to list of post URLs to archive.")
+    new_parser.add_argument("--post", action="store", help="ID of single post to archive.")
+    new_parser.add_argument(
+        "-s",
+        "--start_date",
+        type=lambda d: datetime.fromisoformat(d),
+        help="Date to start getting posts/comments (ISO 8601 format).",
+    )
+    new_parser.add_argument(
+        "-e",
+        "--end_date",
+        type=lambda d: datetime.fromisoformat(d),
+        help="Date to stop getting posts/comments (ISO 8601 format).",
+    )
+    new_parser.add_argument(
+        "-c", "--cdf", action="store_true", default=False, help="Don't skip FTF/CDF threads (when operating by date)."
+    )
     return new_parser
 
 
@@ -92,3 +129,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.file:
         load_post_list_file(args.file)
+    elif args.post:
+        load_post_by_id(args.post)
+    elif args.start_date and args.end_date:
+        if args.start_date > args.end_date:
+            raise ValueError("start_date must be before end_date")
+        load_posts_from_dates(args.start_date, args.end_date, not args.cdf)
+    else:
+        raise ValueError("Must provide either --file, --post, or --start_date and --end_date.")

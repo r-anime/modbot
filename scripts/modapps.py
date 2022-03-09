@@ -30,7 +30,7 @@ def process_row(row, activity_start_date, activity_end_date):
     :return: list of strings
     """
 
-    username = re.sub("/?u?/", "", row[username_key])
+    username = re.sub("/?u?/", "", row[username_key]).strip()
     print(f"Processing {username}...")
 
     response_body = f"### {username_key}\n\n> https://www.reddit.com/user/{username}\n\n"
@@ -145,8 +145,10 @@ def main():
         for row in reader:
             comment_list = process_row(row, activity_window_datetime, app_announcement_datetime)
             top_level = thread.reply(comment_list[0])
+            top_level.disable_inbox_replies()
             for comment_str in comment_list[1:]:
-                top_level.reply(comment_str)
+                comment = top_level.reply(comment_str)
+                comment.disable_inbox_replies()
 
 
 if __name__ == "__main__":
