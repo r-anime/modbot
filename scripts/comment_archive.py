@@ -3,11 +3,12 @@ Saves old posts and comments into the database. Use with -h for instructions.
 """
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 
 import praw
 from praw.models.reddit.submission import Submission
+import psaw
 
 import config_loader
 from services import post_service, comment_service
@@ -99,7 +100,37 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
     """
     Saves all posts made in the specified time frame and their comments.
     """
-    pass
+    current_date = start_date
+    try:
+        global reddit, subreddit, ps_api
+        reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+        subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+        ps_api = psaw.PushshiftAPI(reddit)
+        while current_date < end_date:
+            step_date = current_date + timedelta(hours=1)
+            logger.info(f"Loading comments between {current_date} and {step_date}")
+            comments = ps_api.search_comments(
+                after=int(current_date.timestamp()), before=int(step_date.timestamp()), subreddit="anime"
+            )
+            index = -1
+            logger.info("Comments loaded, processing...")
+            for index, comment in enumerate(comments):
+                try:
+                    logger.debug(f"Saving parent comments of {comment.id}")
+                    comment_service.add_comment_parent_tree(reddit, comment)
+                    logger.debug(f"Saving comment {comment.id}")
+                    comment_service.add_comment(comment)
+                    if (index + 1) % 100 == 0:
+                        logger.info(f"Completed {index + 1} comments after {current_date.isoformat()}")
+                except Exception:
+                    logger.exception(f"Unable to save comment {comment}, continuing in 10 seconds...")
+                    time.sleep(10)
+            logger.info(f"Finished {current_date.isoformat()} to {step_date.isoformat()}, total {index + 1} comments")
+            current_date = step_date
+
+    except Exception:
+        logger.exception(f"Unable to save posts after {current_date}, continuing in 30 seconds...")
+        time.sleep(30)
 
 
 def _get_parser() -> argparse.ArgumentParser:
