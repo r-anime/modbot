@@ -20,8 +20,8 @@ COPY --from=compile-image /opt/venv /opt/venv
 RUN mkdir -p /opt/modbot
 COPY src /opt/modbot/src
 COPY tools /opt/modbot/tools
-COPY scripts/*.py /opt/modbot/src/
+COPY scripts /opt/modbot/src/scripts
 
 # Make sure we use the virtualenv:
 ENV PATH="/opt/venv/bin:$PATH"
-WORKDIR /opt/modbot/
+WORKDIR /opt/modbot/src/
