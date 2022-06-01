@@ -39,7 +39,7 @@ def process_post(submission: Submission):
 
     discord_embed = post_service.format_post_embed(post)
     discord_message_id = discord.send_webhook_message(
-        config_loader.DISCORD["webhook_url"], {"embeds": [discord_embed]}, return_message_id=True
+        config_loader.DISCORD["post_webhook_url"], {"embeds": [discord_embed]}, return_message_id=True
     )
     if discord_message_id:
         post.sent_to_feed = True
