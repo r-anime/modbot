@@ -29,6 +29,7 @@ DB_CONNECTION = (
 DISCORD = {
     "enabled": os.environ.get("DISCORD_ENABLED", "False").lower() in ["true", "t", "1", "yes", "y"],  # load as bool
     "webhook_url": os.environ.get("DISCORD_WEBHOOK_URL"),
+    "post_webhook_url": os.environ.get("DISCORD_POST_WEBHOOK_URL", os.environ.get("DISCORD_WEBHOOK_URL")),
 }
 
 LOGGING = {
