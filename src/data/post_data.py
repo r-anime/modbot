@@ -20,11 +20,13 @@ class PostModel(BaseModel):
         "score",
         "url",
         "body",
+        "metadata",
         "edited",
         "distinguished",
         "deleted",
         "removed",
         "sent_to_feed",
+        "discord_message_id",
     ]
 
     def set_id(self, id_base36: str):
