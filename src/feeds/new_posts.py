@@ -2,7 +2,6 @@
 Monitors a subreddit and relays every new submission to a Discord channel via webhook.
 """
 
-from datetime import datetime, timezone
 import time
 
 import praw
@@ -17,7 +16,6 @@ from utils.logger import logger
 # Current reddit session and subreddit, initialized when first starting up or after an error.
 reddit = None
 subreddit = None
-flair_colors = {}
 
 
 def process_post(submission: Submission):
@@ -39,68 +37,17 @@ def process_post(submission: Submission):
     else:
         post = post_service.add_post(submission)
 
-    send_new_submission_message(submission)
-    post.sent_to_feed = True
+    discord_embed = post_service.format_post_embed(post)
+    discord_message_id = discord.send_webhook_message(
+        config_loader.DISCORD["webhook_url"], {"embeds": [discord_embed]}, return_message_id=True
+    )
+    if discord_message_id:
+        post.sent_to_feed = True
+        post.discord_message_id = discord_message_id
 
     base_data_service.update(post)
 
     logger.debug(f"Finished processing {submission.id}")
-
-
-def send_new_submission_message(submission: Submission):
-    """
-    Sends an embed to the specified Discord webhook with details of the Reddit submission.
-    """
-
-    # Escape any formatting characters in the title since it'll apply them in the embed.
-    title = discord.escape_formatting(submission.title)
-
-    embed_json = {
-        "title": title[:253] + "..." if len(title) > 256 else title,
-        "url": f"https://redd.it/{submission.id}",
-        "author": {"name": f"/u/{submission.author.name}"},
-        "timestamp": datetime.fromtimestamp(submission.created_utc, timezone.utc).isoformat(),
-        "footer": {"text": f"{submission.id} | {submission.link_flair_text}"},
-        "fields": [],
-        "color": flair_colors.get(submission.link_flair_template_id, 0),
-    }
-
-    # Link posts include a direct link to the thing submitted as well.
-    if not submission.is_self:
-        embed_json["description"] = submission.url
-
-    # If they're posting social media/Youtube channel links grab extra info for searching later.
-    if submission.media is not None and submission.media.get("oembed"):
-        if submission.media["oembed"].get("author_url"):
-            media_info = {"name": "Media Channel", "value": submission.media["oembed"]["author_url"]}
-            embed_json["fields"].append(media_info)
-
-    if submission.media is not None and submission.media.get("reddit_video"):
-        reddit_video = submission.media["reddit_video"]
-        if "height" in reddit_video and "width" in reddit_video:
-            media_info = {"name": "Resolution", "value": f'{reddit_video["width"]}x{reddit_video["height"]}'}
-            embed_json["fields"].append(media_info)
-        if "duration" in reddit_video:
-            minutes, seconds = reddit_video["duration"] // 60, reddit_video["duration"] % 60
-            media_info = {"name": "Duration", "value": f"{minutes}:{seconds:02}"}
-            embed_json["fields"].append(media_info)
-
-    logger.debug(embed_json)
-
-    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
-
-
-def load_post_flairs():
-    """
-    Loads flair colors from the subreddit, used to color Discord embeds.
-    """
-
-    global flair_colors
-    flair_colors = {}
-    flair_list = subreddit.flair.link_templates
-    for flair in flair_list:
-        color_hex = flair["background_color"].replace("#", "")
-        flair_colors[flair["id"]] = int(color_hex, base=16)
 
 
 def monitor_stream():
@@ -115,7 +62,7 @@ def monitor_stream():
             reddit = praw.Reddit(**config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             logger.info("Loading flairs...")
-            load_post_flairs()
+            post_service.load_post_flairs(subreddit)
             logger.info("Starting submission stream...")
             for submission in subreddit.stream.submissions(skip_existing=False):
                 process_post(submission)
