@@ -5,9 +5,11 @@ from praw.models.reddit.submission import Submission
 
 from data.post_data import PostData, PostModel
 from services import user_service
-from utils import reddit
+from utils import reddit, discord
+from utils.logger import logger
 
 _post_data = PostData()
+_flair_colors = {}
 
 
 def get_post_by_id(post_id: Union[str, int]) -> Optional[PostModel]:
@@ -69,6 +71,66 @@ def update_post(existing_post: PostModel, reddit_post: Submission) -> PostModel:
     return updated_post
 
 
+def format_post_embed(post: PostModel):
+    """
+    Formats the post as a Discord embed for sending to a webhook.
+    """
+
+    # Escape any formatting characters in the title since it'll apply them in the embed.
+    title = discord.escape_formatting(post.title)
+
+    embed_json = {
+        "title": title[:253] + "..." if len(title) > 256 else title,
+        "url": f"https://redd.it/{post.id36}",
+        "author": {"name": f"/u/{post.author}"},
+        "timestamp": post.created_time.isoformat(),
+        "footer": {"text": f"{post.id36} | {post.flair_text}"},
+        "fields": [],
+        "color": _flair_colors.get(str(post.flair_id), 0),
+    }
+
+    # Link posts include a direct link to the thing submitted as well.
+    if post.url:
+        embed_json["description"] = post.url
+
+    # If they're posting social media/Youtube channel links grab extra info for searching later.
+    if post.metadata and post.metadata.get("media"):
+        media_metadata = post.metadata.get("media")
+
+        if channel_name := media_metadata.get("channel"):
+            media_info = {"name": "Media Channel", "value": channel_name}
+            embed_json["fields"].append(media_info)
+
+        if resolution := media_metadata.get("resolution"):
+            media_info = {
+                "name": "Resolution",
+                "value": f'{resolution["width"]}x{resolution["height"]}',
+                "inline": True,
+            }
+            embed_json["fields"].append(media_info)
+
+        if duration := media_metadata.get("duration"):
+            minutes, seconds = duration // 60, duration % 60
+            media_info = {"name": "Duration", "value": f"{minutes}:{seconds:02}", "inline": True}
+            embed_json["fields"].append(media_info)
+
+    return embed_json
+
+
+def load_post_flairs(subreddit):
+    """
+    Loads flair colors from the subreddit, used to color Discord embeds.
+    """
+
+    global _flair_colors
+    _flair_colors = {}
+    flair_list = subreddit.flair.link_templates
+    for flair in flair_list:
+        color_hex = flair["background_color"].replace("#", "")
+        _flair_colors[flair["id"]] = int(color_hex, base=16)
+    logger.info(f"Flairs loaded: {_flair_colors}")
+
+
 def _create_post_model(reddit_post: Submission) -> PostModel:
     """
     Populate a new PostModel based on the Reddit thread.
@@ -91,6 +153,28 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
         post.body = reddit_post.selftext
     else:
         post.url = reddit_post.url
+
+    # If they're posting social media/Youtube channel links grab extra info for searching later.
+    metadata = {}
+    if reddit_post.media is not None and reddit_post.media.get("oembed"):
+        if reddit_post.media["oembed"].get("author_url"):
+            if "media" not in metadata:
+                metadata["media"] = {}
+            metadata["media"]["channel"] = reddit_post.media["oembed"]["author_url"]
+
+    # Videos uploaded to reddit include resolution and duration.
+    if reddit_post.media is not None and reddit_post.media.get("reddit_video"):
+        reddit_video = reddit_post.media["reddit_video"]
+        if "height" in reddit_video and "width" in reddit_video:
+            if "media" not in metadata:
+                metadata["media"] = {}
+            metadata["media"]["resolution"] = {"width": reddit_video["width"], "height": reddit_video["height"]}
+        if "duration" in reddit_video:
+            if "media" not in metadata:
+                metadata["media"] = {}
+            metadata["media"]["duration"] = reddit_video["duration"]
+
+    post.metadata = metadata
 
     # Posts by deleted users won't have an author.
     if reddit_post.author is not None:
