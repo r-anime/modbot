@@ -114,6 +114,12 @@ def format_post_embed(post: PostModel):
             media_info = {"name": "Duration", "value": f"{minutes}:{seconds:02}", "inline": True}
             embed_json["fields"].append(media_info)
 
+    if post.metadata and post.metadata.get("nsfw"):
+        embed_json["fields"].append({"name": "NSFW", "value": "\u200b", "inline": True})
+
+    if post.metadata and post.metadata.get("spoiler"):
+        embed_json["fields"].append({"name": "Spoiler", "value": "\u200b", "inline": True})
+
     return embed_json
 
 
@@ -154,8 +160,9 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
     else:
         post.url = reddit_post.url
 
+    metadata = {"nsfw": reddit_post.over_18, "spoiler": reddit_post.spoiler}
+
     # If they're posting social media/Youtube channel links grab extra info for searching later.
-    metadata = {}
     if reddit_post.media is not None and reddit_post.media.get("oembed"):
         if reddit_post.media["oembed"].get("author_url"):
             if "media" not in metadata:

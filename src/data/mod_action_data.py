@@ -36,6 +36,42 @@ class ModActionData(BaseData):
 
         return ModActionModel(result_rows[0])
 
+    def get_mod_actions_targeting_post(
+        self, post_id: int, actions: list[str] = None, limit: int = None, order: str = "DESC"
+    ):
+
+        where_clauses = ["target_post_id = :post_id"]
+        sql_kwargs = {"post_id": post_id}
+
+        if actions:
+            action_params = [f":action{i}" for i, _ in enumerate(actions)]
+            action_param_str = ", ".join(action_params)
+            where_clauses.append(f"action in ({action_param_str})")
+            for param, action in zip(action_params, actions):
+                sql_kwargs[param.lstrip(":")] = action
+
+        if limit:
+            limit_str = "LIMIT :limit"
+            sql_kwargs["limit"] = limit
+        else:
+            limit_str = ""
+
+        where_str = " AND ".join(where_clauses)
+        order_str = "ORDER BY created_time DESC" if order == "DESC" else ""
+
+        sql = text(
+            f"""
+            SELECT * FROM mod_actions
+            WHERE {where_str}
+            {order_str}
+            {limit_str};
+            """
+        )
+
+        result_rows = self.execute(sql, **sql_kwargs)
+        result_models = [ModActionModel(row) for row in result_rows]
+        return result_models
+
     def get_mod_actions_targeting_username(
         self, username: str, actions: list[str] = None, start_date: str = None, end_date: str = None
     ) -> list[ModActionModel]:
@@ -43,8 +79,11 @@ class ModActionData(BaseData):
         sql_kwargs = {"username": username.lower()}
 
         if actions:
-            where_clauses.append("action in (:actions_str)")
-            sql_kwargs["actions_str"] = ",".join(actions)
+            action_params = [f":action{i}" for i, _ in enumerate(actions)]
+            action_param_str = ", ".join(action_params)
+            where_clauses.append(f"action in ({action_param_str})")
+            for param, action in zip(action_params, actions):
+                sql_kwargs[param.lstrip(":")] = action
 
         if start_date:
             where_clauses.append("created_time >= :start_date")

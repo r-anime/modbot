@@ -63,3 +63,30 @@ def send_webhook_message(channel_webhook_url, json_content, return_message_id=Fa
 
     logger.error(f"Unable to send webhook message, content: {json_content}")
     return False
+
+
+def update_webhook_message(channel_webhook_url, message_id, json_content, retries=3):
+    if not config_loader.DISCORD["enabled"]:
+        return True
+
+    if message_id is None:
+        return False
+
+    attempt = 0
+    while attempt <= retries:
+        try:
+            message_edit_url = f"{channel_webhook_url.rstrip('/')}/messages/{message_id}"
+            response = requests.patch(message_edit_url, json=json_content)
+
+            if response.status_code in (200, 204):
+                return True
+
+            logger.warning(f"Webhook response {response.status_code}: {response.text}")
+        except Exception:
+            logger.exception("Unexpected error while attempting to send webhook message.")
+
+        time.sleep(5)
+        attempt += 1
+
+    logger.error(f"Unable to send webhook message, content: {json_content}")
+    return False

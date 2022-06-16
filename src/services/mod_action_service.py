@@ -4,6 +4,7 @@ from typing import Optional
 from praw.models.mod_action import ModAction
 
 from constants import mod_constants
+from data.post_data import PostModel
 from data.mod_action_data import ModActionData, ModActionModel
 from utils.reddit import base36decode
 
@@ -16,6 +17,24 @@ def get_mod_action_by_id(mod_action_id: str) -> Optional[ModActionModel]:
     """
 
     return _mod_action_data.get_mod_action_by_id(mod_action_id)
+
+
+def get_most_recent_approve_remove_by_post(post: PostModel) -> Optional[ModActionModel]:
+    """
+    Gets the most recent approve/remove/spam mod action taken against a post.
+    :param post: PostModel
+    :return: ModActionModel or None
+    """
+
+    action_list = [
+        mod_constants.ModActionEnum.approve_post.value,
+        mod_constants.ModActionEnum.remove_post.value,
+        mod_constants.ModActionEnum.spam_post.value,
+    ]
+    action_list = _mod_action_data.get_mod_actions_targeting_post(post.id, action_list, 1, "DESC")
+    if action_list:
+        return action_list[0]
+    return None
 
 
 def get_mod_actions_targeting_username(
