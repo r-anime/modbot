@@ -2,9 +2,18 @@
 Static values about mods and mod actions that generally shouldn't need to change.
 """
 
+from enum import Enum
+
 BOTS = ["AnimeMod", "AutoModerator"]
 
 ADMINS = ["reddit", "Reddit Legal", "Anti-Evil Operations"]
+
+
+class ModActionEnum(Enum):
+    approve_post = "approvelink"
+    remove_post = "removelink"
+    spam_post = "spamlink"
+
 
 # There are more types of actions that can be set here, currently used in selecting distinct posts/comments/users.
 MOD_ACTIONS_POSTS = [
@@ -14,6 +23,17 @@ MOD_ACTIONS_POSTS = [
     "spamlink",
     "spoiler",
     "unspoiler",
+]
+
+# Actions denoting a change in post status that warrants an update in the post feed.
+MOD_ACTIONS_POST_FEED_UPDATE = [
+    "approvelink",
+    "removelink",
+    "spamlink",
+    "editflair",
+    "spoiler",
+    "unspoiler",
+    "marknsfw",
 ]
 
 MOD_ACTIONS_COMMENTS = [
