@@ -1,0 +1,6 @@
+# Ignore everything but src/tools/scripts
+**
+!src
+!tools
+!scripts
+!requirements*.txt
