@@ -3,6 +3,7 @@
 config.py
 dev.env
 prod.env
+**/.env
 
 # Possible database files if using sqlite and not saving to a different directory
 *.db
