@@ -10,16 +10,15 @@ import csv
 from datetime import datetime, timedelta
 import re
 
-import praw
-
 import config_loader
 from services import comment_service, post_service, mod_action_service
+from utils import reddit as reddit_utils
 
 
 username_key = "What is your Reddit username?"
 
 
-reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
 
 
 def process_row(row, activity_start_date, activity_end_date):

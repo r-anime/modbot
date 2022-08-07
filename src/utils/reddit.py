@@ -1,5 +1,9 @@
 """Utilities regarding Reddit posts/users/etc"""
 
+import copy
+import mintotp
+import praw
+
 from data.base_data import BaseModel
 
 
@@ -53,3 +57,22 @@ def make_permalink(model: BaseModel) -> str:
         return base_url + f"/user/{model.username}"
 
     raise TypeError(f"Unknown model {model.__class__}")
+
+
+def get_reddit_instance(config_dict: dict):
+    """
+    Initialize a reddit instance and return it.
+
+    :param config_dict: dict containing necessary values for authenticating
+    :return: reddit instance
+    """
+
+    auth_dict = copy.copy(config_dict)
+    password = config_dict["password"]
+    totp_secret = config_dict.get("totp_secret")
+
+    if totp_secret:
+        auth_dict["password"] = f"{password}:{mintotp.totp(totp_secret)}"
+
+    reddit_instance = praw.Reddit(**auth_dict)
+    return reddit_instance

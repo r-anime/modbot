@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 import time
 from typing import Optional
 
-import praw
 from praw.models.mod_action import ModAction
 
 import config_loader
@@ -276,7 +275,7 @@ def monitor_stream():
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             _get_moderators()
             logger.info("Loading flairs...")
@@ -311,7 +310,7 @@ def load_archive(archive_args: argparse.Namespace):
         before_action_id = "ModAction_" + before_action_id
 
     global reddit, subreddit
-    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
 
     current_id = before_action_id if before_action_id else [log.id for log in subreddit.mod.log(limit=1)][0]
@@ -323,7 +322,7 @@ def load_archive(archive_args: argparse.Namespace):
         try:
             logger.info("Connecting to Reddit...")
             # Since the parse_mod_action function relies on reddit and subreddit existing in the global scope.
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             # Not exactly sure of behavior when running past what's available, but this attempts to track when there
             # aren't any processed so we can reasonably drop out.

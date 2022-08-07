@@ -4,11 +4,11 @@ Monitors a subreddit for new comments and saves them to a database.
 
 import time
 
-import praw
 from praw.models.reddit.comment import Comment
 
 import config_loader
 from services import post_service, comment_service
+from utils import reddit as reddit_utils
 from utils.logger import logger
 
 
@@ -57,7 +57,7 @@ def monitor_stream():
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             logger.info("Starting comment stream...")
             for comment in subreddit.stream.comments(skip_existing=False):
