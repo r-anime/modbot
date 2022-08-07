@@ -18,6 +18,7 @@ REDDIT = {
         "user_agent": os.environ.get("REDDIT_USER_AGENT"),
         "username": os.environ.get("REDDIT_USERNAME"),
         "password": os.environ.get("REDDIT_USER_PASSWORD"),
+        "totp_secret": os.environ.get("REDDIT_TOTP_SECRET"),
     },
 }
 

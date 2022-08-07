@@ -1,9 +1,7 @@
 import time
 
-import praw
-
 import config_loader
-from utils import discord
+from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
 
@@ -46,7 +44,8 @@ if __name__ == "__main__":
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])  # Requires an account linked to /u/Sub_Mentions
+            # Requires an account linked to /u/Sub_Mentions
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             while True:
                 check_inbox(reddit)
                 logger.debug("waiting...")

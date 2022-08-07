@@ -6,11 +6,11 @@ import argparse
 from datetime import datetime
 import time
 
-import praw
 from praw.models.reddit.submission import Submission
 
 import config_loader
 from services import post_service, comment_service
+from utils import reddit as reddit_utils
 from utils.logger import logger
 
 
@@ -61,7 +61,7 @@ def save_post_and_comments(reddit_submission: Submission, pushshift_submission=N
 
 def load_post_by_id(post_id: str):
     global reddit, subreddit
-    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
     reddit_submission = reddit.submission(id=post_id)
     if reddit_submission.subreddit_name_prefixed != subreddit.display_name_prefixed:
@@ -82,7 +82,7 @@ def load_post_list_file(archive_file_path: str):
     for post in post_list:
         try:
             global reddit, subreddit
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             reddit_submission = reddit.submission(url=post)
             if reddit_submission.subreddit_name_prefixed != subreddit.display_name_prefixed:

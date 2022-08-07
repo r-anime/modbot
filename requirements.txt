@@ -3,3 +3,4 @@ psycopg2-binary==2.9.3
 requests==2.27.1
 SQLAlchemy==1.4.25
 python-dotenv==0.20.0
+mintotp==0.3.0

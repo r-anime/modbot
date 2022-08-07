@@ -4,12 +4,11 @@ Monitors a subreddit and relays every new submission to a Discord channel via we
 
 import time
 
-import praw
 from praw.models.reddit.submission import Submission
 
 import config_loader
 from services import post_service, base_data_service
-from utils import discord
+from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
 
@@ -59,7 +58,7 @@ def monitor_stream():
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             logger.info("Loading flairs...")
             post_service.load_post_flairs(subreddit)
