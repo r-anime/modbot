@@ -5,8 +5,14 @@ import config_loader
 
 from contextlib import contextmanager
 
-_engine = create_engine(config_loader.DB_CONNECTION)
-Session = sessionmaker(bind=_engine)
+
+Session = None
+
+
+def _create_session():
+    _engine = create_engine(config_loader.DB_CONNECTION)
+    global Session
+    Session = sessionmaker(bind=_engine)
 
 
 @contextmanager
@@ -15,6 +21,8 @@ def session_scope():
     Provide a transactional scope around a series of operations.
     """
 
+    if Session is None:
+        _create_session()
     session = Session()
     try:
         yield session

@@ -1,10 +1,13 @@
 """Utilities regarding Reddit posts/users/etc"""
 
 import copy
+import typing
+
 import mintotp
 import praw
 
-from data.base_data import BaseModel
+if typing.TYPE_CHECKING:
+    from data.base_data import BaseModel
 
 
 _b36_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -39,7 +42,7 @@ def base36decode(number):
     return int(number, 36)
 
 
-def make_permalink(model: BaseModel) -> str:
+def make_permalink(model: "BaseModel") -> str:
     # Avoiding circular imports.
     from data.comment_data import CommentModel
     from data.post_data import PostModel
