@@ -1,7 +1,8 @@
 from copy import copy
 from typing import Union
 
-import psycopg2.extensions, psycopg2.extras
+import psycopg2.extensions
+import psycopg2.extras
 from sqlalchemy.sql import text
 from sqlalchemy.engine.result import Row
 
