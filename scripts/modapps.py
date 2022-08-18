@@ -36,8 +36,8 @@ def process_row(row, activity_start_date, activity_end_date):
 
     response_body = f"### {username_key}\n\n> https://www.reddit.com/user/{username}\n\n"
     ps_url = (
-            f"https://camas.unddit.com/#%7B%22author%22:%22{username}%22,"
-            + "%22subreddit%22:%22anime%22,%22resultSize%22:100%7D"
+        f"https://camas.unddit.com/#%7B%22author%22:%22{username}%22,"
+        + "%22subreddit%22:%22anime%22,%22resultSize%22:100%7D"
     )
     response_body += f"> [View comments via Pushshift]({ps_url}) (including deleted)\n\n"
 
