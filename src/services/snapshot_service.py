@@ -66,9 +66,9 @@ def add_frontpage_post(reddit_post: Submission, snapshot: SnapshotModel, rank: i
     # Add or update post as necessary.
     if not post:
         logger.debug(f"Saving post {post_id}")
-        post = post_service.add_post(reddit_post)
+        post = await post_service.add_post(reddit_post)
     else:
-        post = post_service.update_post(post, reddit_post)
+        post = await post_service.update_post(post, reddit_post)
 
     frontpage_model = SnapshotFrontpageModel()
     frontpage_model.post_id = post.id

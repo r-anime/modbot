@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from praw.models.mod_action import ModAction
+if TYPE_CHECKING:
+    from apraw.models.subreddit.moderation import ModAction
 
 from constants import mod_constants
 from data.post_data import PostModel
@@ -47,7 +48,7 @@ def get_mod_actions_targeting_username(
     return _mod_action_data.get_mod_actions_targeting_username(username, actions, start_date, end_date)
 
 
-def add_mod_action(reddit_mod_action: ModAction) -> ModActionModel:
+async def add_mod_action(reddit_mod_action: "ModAction") -> ModActionModel:
     """
     Parses some basic information for a mod action and adds it to the database.
     Assumes acting mod and target user/post/comment are already created if necessary,
@@ -57,11 +58,12 @@ def add_mod_action(reddit_mod_action: ModAction) -> ModActionModel:
     mod_action = ModActionModel()
 
     mod_action.id = reddit_mod_action.id.replace("ModAction_", "")
-    mod_action.mod = reddit_mod_action.mod.name
+    moderator = await reddit_mod_action.mod()
+    mod_action.mod = moderator.name
     mod_action.action = reddit_mod_action.action
     mod_action.details = reddit_mod_action.details
     mod_action.description = reddit_mod_action.description
-    mod_action.created_time = datetime.fromtimestamp(reddit_mod_action.created_utc, tz=timezone.utc)
+    mod_action.created_time = reddit_mod_action.created_utc.astimezone(tz=timezone.utc)
 
     if reddit_mod_action.target_author:
         mod_action.target_user = reddit_mod_action.target_author

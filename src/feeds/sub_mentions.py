@@ -34,7 +34,7 @@ def check_inbox(reddit):
         embed_json = {"title": title, "description": desc, "color": colour}  # yeah the Australia
 
         logger.debug(embed_json)
-        discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
+        await discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
         message.mark_read()
         time.sleep(5)  # wait between messages to not flood Discord

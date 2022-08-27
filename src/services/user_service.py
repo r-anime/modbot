@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from praw.models.reddit.redditor import Redditor
+if TYPE_CHECKING:
+    from apraw.models.reddit.redditor import Redditor
 from prawcore.exceptions import NotFound
 
 from data.user_data import UserData, UserModel
@@ -16,7 +17,7 @@ def get_user(username: str) -> Optional[UserModel]:
     return _user_data.get_user(username)
 
 
-def add_user(reddit_user: Redditor) -> UserModel:
+def add_user(reddit_user: "Redditor") -> UserModel:
     """Parses some basic information for the user and adds them to the database."""
 
     user = UserModel()
@@ -41,7 +42,7 @@ def add_user(reddit_user: Redditor) -> UserModel:
     return _user_data.insert(user, error_on_conflict=False)
 
 
-def update_user(existing_user: UserModel, reddit_user: Redditor) -> UserModel:
+def update_user(existing_user: UserModel, reddit_user: "Redditor") -> UserModel:
     """
     For the provided user, update fields to the current state and save to the database if necessary.
     For the moment, the only things that can change overall are whether the user is deleted or suspended.
@@ -52,7 +53,7 @@ def update_user(existing_user: UserModel, reddit_user: Redditor) -> UserModel:
     # Everyone else won't have the attribute set, so default it to false.
     try:
         existing_user.suspended = getattr(reddit_user, "is_suspended", False)
-    except NotFound:
+    except KeyError:
         # In this case, the user's been deleted.
         existing_user.deleted = True
 

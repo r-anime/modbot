@@ -1,6 +1,7 @@
+apraw==0.6.9a0
 praw==7.6.0
 psycopg2-binary==2.9.3
-requests==2.27.1
+aiohttp==3.8.1
 SQLAlchemy==1.4.25
 python-dotenv==0.20.0
 mintotp==0.3.0

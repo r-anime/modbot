@@ -17,7 +17,7 @@ reddit = None
 subreddit = None
 
 
-def process_comment(reddit_comment: Comment):
+async def process_comment(reddit_comment: Comment):
     """
     Process a single PRAW Comment. Adds it to the database if it didn't previously exist as well as parent comments
     and the thread it belongs to.
@@ -27,7 +27,7 @@ def process_comment(reddit_comment: Comment):
 
     if comment:
         # Update our record of the comment if necessary.
-        comment_service.update_comment(comment, reddit_comment)
+        await comment_service.update_comment(comment, reddit_comment)
         return
 
     author_name = reddit_comment.author.name if reddit_comment.author is not None else "[deleted]"
@@ -37,13 +37,13 @@ def process_comment(reddit_comment: Comment):
     post = post_service.get_post_by_id(reddit_comment.submission.id)
 
     if not post:
-        post_service.add_post(reddit_comment.submission)
+        await post_service.add_post(reddit_comment.submission)
 
     # Since all comments will reference a parent if it exists, add all parent comments first.
     logger.debug(f"Saving parent comments of {reddit_comment.id}")
-    comment_service.add_comment_parent_tree(reddit, reddit_comment)
+    await comment_service.add_comment_parent_tree(reddit, reddit_comment)
     logger.debug(f"Saving comment {reddit_comment.id}")
-    comment = comment_service.add_comment(reddit_comment)
+    comment = await comment_service.add_comment(reddit_comment)
 
     logger.debug(f"Finished processing {comment.id}")
 

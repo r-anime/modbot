@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
-from typing import Union, Optional
+from typing import Union, Optional, TYPE_CHECKING
 
-from praw.models.reddit.submission import Submission
+if TYPE_CHECKING:
+    from apraw.models.reddit.submission import Submission
 
 from data.post_data import PostData, PostModel
 from services import user_service
@@ -31,28 +32,32 @@ def get_posts_by_username(username: str, start_date: str = None, end_date: str =
     return _post_data.get_posts_by_username(username, start_date, end_date)
 
 
-def add_post(reddit_post: Submission) -> PostModel:
+async def add_post(reddit_post: "Submission") -> PostModel:
     """
     Parses some basic information for a post and adds it to the database.
     Creates post author if necessary.
     """
 
-    post = _create_post_model(reddit_post)
+    post = await _create_post_model(reddit_post)
 
     # And insert the author into the database if they don't exist yet.
-    if reddit_post.author is not None and not user_service.get_user(reddit_post.author.name):
-        user_service.add_user(reddit_post.author)
+    try:
+        author = await reddit_post.author()
+    except KeyError:
+        author = None
+    if author is not None and not user_service.get_user(author.name):
+        user_service.add_user(author)
 
     new_post = _post_data.insert(post, error_on_conflict=False)
     return new_post
 
 
-def update_post(existing_post: PostModel, reddit_post: Submission) -> PostModel:
+async def update_post(existing_post: PostModel, reddit_post: "Submission") -> PostModel:
     """
     For the provided post, update fields to the current state and save to the database if necessary.
     """
 
-    new_post = _create_post_model(reddit_post)
+    new_post = await _create_post_model(reddit_post)
 
     non_update_fields = ["author", "title", "url"]
 
@@ -137,7 +142,7 @@ def load_post_flairs(subreddit):
     logger.info(f"Flairs loaded: {_flair_colors}")
 
 
-def _create_post_model(reddit_post: Submission) -> PostModel:
+async def _create_post_model(reddit_post: "Submission") -> PostModel:
     """
     Populate a new PostModel based on the Reddit thread.
     """
@@ -147,7 +152,7 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
     post.set_id(reddit_post.id)
     post.title = reddit_post.title
     post.score = reddit_post.score
-    post.created_time = datetime.fromtimestamp(reddit_post.created_utc, tz=timezone.utc)
+    post.created_time = reddit_post.created_utc.astimezone(tz=timezone.utc)
 
     # If link_flair_text is None, link_flair_template_id won't even exist. Still using getattr for safety.
     if reddit_post.link_flair_text:
@@ -184,8 +189,12 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
     post.metadata = metadata
 
     # Posts by deleted users won't have an author.
-    if reddit_post.author is not None:
-        post.author = reddit_post.author.name
+    try:
+        author = await reddit_post.author()
+    except KeyError:
+        author = None
+    if author is not None:
+        post.author = author.name
 
     # edited is either a timestamp or False if it hasn't been edited.
     if reddit_post.edited:

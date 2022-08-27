@@ -123,7 +123,7 @@ def _report_monthly(report_args: argparse.Namespace):
 * Users unbanned: {unbanned_users}
 * Admin/Anti-Evil Operations: removed posts: {admin_removed_posts}, removed comments: {admin_removed_comments}.```"""  # noqa: E501
 
-    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"content": meta_message})
+    await discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"content": meta_message})
 
 
 def _get_parser() -> argparse.ArgumentParser:

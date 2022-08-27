@@ -17,7 +17,7 @@ reddit = None
 subreddit = None
 
 
-def process_post(submission: Submission):
+async def process_post(submission: Submission):
     """
     Process a single PRAW Submission. Adds it to the database if it didn't previously exist, updates post if necessary.
     """
@@ -32,12 +32,12 @@ def process_post(submission: Submission):
     logger.info(f"Processing post {submission.id} - /u/{author_name} - {submission.link_flair_text}")
 
     if post:
-        post = post_service.update_post(post, submission)
+        post = await post_service.update_post(post, submission)
     else:
-        post = post_service.add_post(submission)
+        post = await post_service.add_post(submission)
 
     discord_embed = post_service.format_post_embed(post)
-    discord_message_id = discord.send_webhook_message(
+    discord_message_id = await discord.send_webhook_message(
         config_loader.DISCORD["post_webhook_url"], {"embeds": [discord_embed]}, return_message_id=True
     )
     if discord_message_id:
@@ -64,7 +64,7 @@ def monitor_stream():
             post_service.load_post_flairs(subreddit)
             logger.info("Starting submission stream...")
             for submission in subreddit.stream.submissions(skip_existing=False):
-                process_post(submission)
+                await process_post(submission)
         except Exception:
             delay_time = 30
             logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")

@@ -1,9 +1,9 @@
 """Utilities regarding Reddit posts/users/etc"""
 
-import copy
 import typing
 
 import mintotp
+import apraw
 import praw
 
 if typing.TYPE_CHECKING:
@@ -62,20 +62,24 @@ def make_permalink(model: "BaseModel") -> str:
     raise TypeError(f"Unknown model {model.__class__}")
 
 
-def get_reddit_instance(config_dict: dict):
+def get_reddit_instance(config_dict: dict, async_praw: bool = True):
     """
     Initialize a reddit instance and return it.
 
     :param config_dict: dict containing necessary values for authenticating
+    :param async_praw: whether or not to use aPRAW instead of PRAW, default True
     :return: reddit instance
     """
 
-    auth_dict = copy.copy(config_dict)
+    auth_dict = {key: config_dict[key] for key in ("client_id", "client_secret", "user_agent", "username", "password")}
     password = config_dict["password"]
     totp_secret = config_dict.get("totp_secret")
 
     if totp_secret:
         auth_dict["password"] = f"{password}:{mintotp.totp(totp_secret)}"
 
-    reddit_instance = praw.Reddit(**auth_dict)
+    if async_praw:
+        reddit_instance = apraw.Reddit(**auth_dict)
+    else:
+        reddit_instance = praw.Reddit(**auth_dict)
     return reddit_instance
