@@ -6,6 +6,12 @@ from data.traffic_data import TrafficData, TrafficMonthlyModel, TrafficDailyMode
 _traffic_data = TrafficData()
 
 
+def get_monthly_traffic(start_date: datetime.date, end_date: datetime.date) -> list[TrafficMonthlyModel]:
+    """Gets monthly views for the specified date range."""
+
+    return _traffic_data.get_monthly_traffic_by_range(start_date, end_date)
+
+
 def add_daily_traffic(
     target_date: datetime.date, unique_pageviews: int, total_pageviews: int, subscribers: int
 ) -> TrafficDailyModel:
