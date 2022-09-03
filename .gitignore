@@ -4,6 +4,7 @@ config.py
 dev.env
 prod.env
 **/.env
+crontab
 
 # Possible database files if using sqlite and not saving to a different directory
 *.db
