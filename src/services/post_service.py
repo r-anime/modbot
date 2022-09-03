@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Union, Optional
 
 from praw.models.reddit.submission import Submission
@@ -29,6 +29,20 @@ def get_posts_by_username(username: str, start_date: str = None, end_date: str =
     """
 
     return _post_data.get_posts_by_username(username, start_date, end_date)
+
+
+def count_posts(start_date: date = None, end_date: date = None, exclude_authors: list = None) -> int:
+    """
+    Gets number of posts made in the given date range.
+    """
+    return _post_data.get_post_count(start_date, end_date, exclude_authors)
+
+
+def count_post_authors(start_date: date = None, end_date: date = None, exclude_authors: list = None) -> int:
+    """
+    Gets number of distinct authors making posts made in the given date range.
+    """
+    return _post_data.get_post_author_count(start_date, end_date, exclude_authors)
 
 
 def add_post(reddit_post: Submission) -> PostModel:

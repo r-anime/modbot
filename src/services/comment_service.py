@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Union, Optional
 
 from praw.models.reddit.comment import Comment
@@ -39,6 +39,20 @@ def get_comments_by_username(username: str, start_date: str = None, end_date: st
     """
 
     return _comment_data.get_comments_by_username(username, start_date, end_date)
+
+
+def count_comments(start_date: date = None, end_date: date = None, exclude_authors: list = None) -> int:
+    """
+    Gets number of comments made in the given date range.
+    """
+    return _comment_data.get_comment_count(start_date, end_date, exclude_authors)
+
+
+def count_comment_authors(start_date: date = None, end_date: date = None, exclude_authors: list = None) -> int:
+    """
+    Gets number of distinct authors making comments made in the given date range.
+    """
+    return _comment_data.get_comment_author_count(start_date, end_date, exclude_authors)
 
 
 def add_comment(reddit_comment: Comment) -> CommentModel:

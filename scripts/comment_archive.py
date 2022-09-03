@@ -80,6 +80,9 @@ def load_post_list_file(archive_file_path: str):
     post_list = [s.strip() for s in archive_file.readlines()]
 
     for post in post_list:
+        # Skip blank lines.
+        if not post:
+            continue
         try:
             global reddit, subreddit
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
