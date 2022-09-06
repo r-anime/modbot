@@ -19,11 +19,15 @@ crontab
 # Backup data directory
 backup/
 
+# macOS
+.DS_Store
+
 # Virtual environment/Python stuff
 .venv
 *.pyc
 *.pyo
 __pycache__
+.mypy_cache
 
 # IDE stuff
 *.iml
