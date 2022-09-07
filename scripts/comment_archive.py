@@ -108,9 +108,13 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime):
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
     ps_api = psaw.PushshiftAPI()
 
-    post_list = list(ps_api.search_submissions(
-        subreddit=config_loader.REDDIT["subreddit"], after=int(start_date.timestamp()), before=int(end_date.timestamp())
-    ))
+    post_list = list(
+        ps_api.search_submissions(
+            subreddit=config_loader.REDDIT["subreddit"],
+            after=int(start_date.timestamp()),
+            before=int(end_date.timestamp()),
+        )
+    )
     for ps_post in post_list:
         if ps_post.subreddit != config_loader.REDDIT["subreddit"]:
             continue
