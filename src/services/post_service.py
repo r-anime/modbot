@@ -54,7 +54,7 @@ def add_post(reddit_post: Submission) -> PostModel:
     post = _create_post_model(reddit_post)
 
     # And insert the author into the database if they don't exist yet.
-    if reddit_post.author is not None and not user_service.get_user(reddit_post.author.name):
+    if reddit_post.author is not None and not user_service.get_user(reddit_post.author):
         user_service.add_user(reddit_post.author)
 
     new_post = _post_data.insert(post, error_on_conflict=False)
@@ -154,6 +154,8 @@ def load_post_flairs(subreddit):
 def _create_post_model(reddit_post: Submission) -> PostModel:
     """
     Populate a new PostModel based on the Reddit thread.
+
+    This has also been adapted for use with Pushshift (psaw) objects rather than just Reddit (praw) ones. The
     """
 
     post = PostModel()
@@ -164,27 +166,31 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
     post.created_time = datetime.fromtimestamp(reddit_post.created_utc, tz=timezone.utc)
 
     # If link_flair_text is None, link_flair_template_id won't even exist. Still using getattr for safety.
-    if reddit_post.link_flair_text:
+    if getattr(reddit_post, "link_flair_text", None):
         post.flair_id = getattr(reddit_post, "link_flair_template_id", None)
         post.flair_text = reddit_post.link_flair_text
 
-    # To differentiate between text and link posts, only one of the two fields should be filled and the other null.
-    if reddit_post.is_self:
+    # In 2022 Reddit began allowing text bodies with other types of posts so now both are checked separately.
+    if reddit_post.selftext:
         post.body = reddit_post.selftext
-    else:
+
+    # Permalink will be part of the URL for text-only posts, e.g.
+    # url: https://www.reddit.com/r/anime/comments/x58lz5/meta_thread_month_of_september_04_2022/
+    # permalink: /r/anime/comments/x58lz5/meta_thread_month_of_september_04_2022/
+    if not reddit_post.url.endswith(reddit_post.permalink):
         post.url = reddit_post.url
 
-    metadata = {"nsfw": reddit_post.over_18, "spoiler": reddit_post.spoiler}
+    metadata = {"nsfw": getattr(reddit_post, "over_18", False), "spoiler": getattr(reddit_post, "spoiler", False)}
 
     # If they're posting social media/Youtube channel links grab extra info for searching later.
-    if reddit_post.media is not None and reddit_post.media.get("oembed"):
+    if getattr(reddit_post, "media", None) is not None and reddit_post.media.get("oembed"):
         if reddit_post.media["oembed"].get("author_url"):
             if "media" not in metadata:
                 metadata["media"] = {}
             metadata["media"]["channel"] = reddit_post.media["oembed"]["author_url"]
 
     # Videos uploaded to reddit include resolution and duration.
-    if reddit_post.media is not None and reddit_post.media.get("reddit_video"):
+    if getattr(reddit_post, "media", None) is not None and reddit_post.media.get("reddit_video"):
         reddit_video = reddit_post.media["reddit_video"]
         if "height" in reddit_video and "width" in reddit_video:
             if "media" not in metadata:
@@ -199,22 +205,27 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
 
     # Posts by deleted users won't have an author.
     if reddit_post.author is not None:
-        post.author = reddit_post.author.name
+        if isinstance(reddit_post.author, str):
+            post.author = reddit_post.author
+        else:
+            post.author = reddit_post.author.name
 
     # edited is either a timestamp or False if it hasn't been edited.
-    if reddit_post.edited:
+    if getattr(reddit_post, "edited", None):
         post.edited = datetime.fromtimestamp(reddit_post.edited, tz=timezone.utc)
 
     # distinguished is a string (usually "moderator", maybe "admin"?) or None.
-    post.distinguished = True if reddit_post.distinguished else False
+    post.distinguished = (
+        True if getattr(reddit_post, "distinguished", False) or getattr(reddit_post, "stickied", False) else False
+    )
 
     # removed_by_category is "deleted" if the post has been deleted
     # or "moderator" if it's been removed by a mod but not deleted.
-    if reddit_post.removed_by_category == "deleted":
+    if getattr(reddit_post, "removed_by_category", "") == "deleted":
         post.deleted = True
 
     # removed is *not* accurate if the post has been deleted, so banned_by is used instead.
     # banned_by will have a mod name if the post was removed even if it's also been deleted.
-    post.removed = True if reddit_post.banned_by else False
+    post.removed = True if getattr(reddit_post, "banned_by", False) else False
 
     return post

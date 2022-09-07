@@ -7,9 +7,10 @@ from datetime import datetime
 import time
 
 from praw.models.reddit.submission import Submission
+import psaw
 
 import config_loader
-from services import post_service, comment_service
+from services import post_service, comment_service, base_data_service
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
@@ -20,15 +21,13 @@ subreddit = None
 ps_api = None
 
 
-def save_post_and_comments(reddit_submission: Submission, pushshift_submission=None):
+def save_comments(reddit_submission: Submission):
     """
-    Saves a single reddit post and its comments to the database.
+    Saves all comments on a single post to the database.
     """
 
     post_name = reddit_submission.permalink
 
-    # Ensure post is in the database first.
-    post_service.add_post(reddit_submission)
     logger.info(f"Loading {reddit_submission.num_comments} comments on {post_name}")
 
     # Load all comments
@@ -68,7 +67,8 @@ def load_post_by_id(post_id: str):
         logger.info(f"Post {post_id} is not on {subreddit.display_name_prefixed}, skipping...")
         return
 
-    save_post_and_comments(reddit_submission)
+    post_service.add_post(reddit_submission)
+    save_comments(reddit_submission)
 
 
 def load_post_list_file(archive_file_path: str):
@@ -91,16 +91,48 @@ def load_post_list_file(archive_file_path: str):
             if reddit_submission.subreddit_name_prefixed != subreddit.display_name_prefixed:
                 logger.info(f"Post {post} is not on {subreddit.display_name_prefixed}, skipping...")
                 continue
-
-            save_post_and_comments(reddit_submission)
+            post_service.add_post(reddit_submission)
+            save_comments(reddit_submission)
         except Exception:
             logger.exception(f"Unable to save {post}, continuing in 30 seconds...")
             time.sleep(30)
 
 
-def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bool = True):
+def load_posts_from_dates(start_date: datetime, end_date: datetime):
     """
-    Saves all posts made in the specified time frame and their comments.
+    Saves all posts made in the specified time frame.
+    """
+    global ps_api, reddit, subreddit
+
+    reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
+    subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+    ps_api = psaw.PushshiftAPI()
+
+    post_list = list(ps_api.search_submissions(
+        subreddit=config_loader.REDDIT["subreddit"], after=int(start_date.timestamp()), before=int(end_date.timestamp())
+    ))
+    for ps_post in post_list:
+        if ps_post.subreddit != config_loader.REDDIT["subreddit"]:
+            continue
+        post = post_service.get_post_by_id(ps_post.id)
+        if post:
+            if post.author is None:
+                post.author = ps_post.author
+            if post.body == "[deleted]" and ps_post.selftext not in ("[deleted]", "[removed]"):
+                post.body = ps_post.selftext
+            base_data_service.update(post)
+        else:
+            post_service.add_post(ps_post)
+
+    post_fullname_list = [f"t3_{post.id}" for post in post_list]
+    reddit_post_list = reddit.info(fullnames=post_fullname_list)
+    for reddit_post in reddit_post_list:
+        save_comments(reddit_post)
+
+
+def load_comments_from_dates(start_date: datetime, end_date: datetime):
+    """
+    Saves all comments made in the specified time frame.
     """
     pass
 
@@ -108,7 +140,7 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
 def _get_parser() -> argparse.ArgumentParser:
     new_parser = argparse.ArgumentParser(description="Archive posts and comments in them.")
     new_parser.add_argument("--file", action="store", help="File path to list of post URLs to archive.")
-    new_parser.add_argument("--post", action="store", help="ID of single post to archive.")
+    new_parser.add_argument("--id", action="store", help="ID of single post to archive.")
     new_parser.add_argument(
         "-s",
         "--start_date",
@@ -122,8 +154,9 @@ def _get_parser() -> argparse.ArgumentParser:
         help="Date to stop getting posts/comments (ISO 8601 format).",
     )
     new_parser.add_argument(
-        "-c", "--cdf", action="store_true", default=False, help="Don't skip FTF/CDF threads (when operating by date)."
+        "-c", "--comments", action="store_true", default=False, help="Gather comments (for date only)"
     )
+    new_parser.add_argument("-p", "--posts", action="store_true", default=False, help="Gather posts (for date only)")
     return new_parser
 
 
@@ -132,11 +165,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.file:
         load_post_list_file(args.file)
-    elif args.post:
-        load_post_by_id(args.post)
+    elif args.id:
+        load_post_by_id(args.id)
     elif args.start_date and args.end_date:
         if args.start_date > args.end_date:
-            raise ValueError("start_date must be before end_date")
-        load_posts_from_dates(args.start_date, args.end_date, not args.cdf)
+            raise ValueError("start_date must be before end_date.")
+        if not (args.posts or args.comments):
+            raise ValueError("Must provide --posts and/or --comments with date values.")
+        if args.posts:
+            load_posts_from_dates(args.start_date, args.end_date)
+        if args.comments:
+            load_comments_from_dates(args.start_date, args.end_date)
     else:
-        raise ValueError("Must provide either --file, --post, or --start_date and --end_date.")
+        raise ValueError("Must provide either --file, --id, or --start_date and --end_date.")
