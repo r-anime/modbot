@@ -178,6 +178,6 @@ def _create_comment_model(reddit_comment: Comment) -> CommentModel:
         comment.deleted = True
 
     # Unlike with posts, removed is still true if the post has been removed and deleted.
-    comment.removed = True if reddit_comment.removed else False
+    comment.removed = True if getattr(reddit_comment, "removed", False) else False
 
     return comment

@@ -10,7 +10,7 @@ from praw.models.reddit.submission import Submission
 import psaw
 
 import config_loader
-from services import post_service, comment_service, base_data_service
+from services import post_service, comment_service, user_service, base_data_service
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
@@ -108,13 +108,18 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime):
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
     ps_api = psaw.PushshiftAPI()
 
-    post_list = list(
+    logger.info(f"Fetching posts between {start_date.isoformat()} and {end_date.isoformat()}")
+
+    ps_list = list(
         ps_api.search_submissions(
             subreddit=config_loader.REDDIT["subreddit"],
             after=int(start_date.timestamp()),
             before=int(end_date.timestamp()),
         )
     )
+    post_list = ps_list[::-1]  # reverse to go in chronological ascending order
+
+    logger.info(f"Found {len(post_list)} posts between {start_date.isoformat()} and {end_date.isoformat()}")
     for ps_post in post_list:
         if ps_post.subreddit != config_loader.REDDIT["subreddit"]:
             continue
@@ -122,6 +127,8 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime):
         if post:
             if post.author is None:
                 post.author = ps_post.author
+                if not user_service.get_user(post.author):
+                    user_service.add_user(post.author)
             if post.body == "[deleted]" and ps_post.selftext not in ("[deleted]", "[removed]"):
                 post.body = ps_post.selftext
             base_data_service.update(post)
@@ -131,7 +138,11 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime):
     post_fullname_list = [f"t3_{post.id}" for post in post_list]
     reddit_post_list = reddit.info(fullnames=post_fullname_list)
     for reddit_post in reddit_post_list:
-        save_comments(reddit_post)
+        try:
+            save_comments(reddit_post)
+        except Exception:
+            logger.exception(f"Unable to save comments on {reddit_post.id}, continuing in 30 seconds...")
+            time.sleep(30)
 
 
 def load_comments_from_dates(start_date: datetime, end_date: datetime):
