@@ -7,8 +7,6 @@ Also collects traffic for the sub provided by the API.
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 
-import praw
-
 import config_loader
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
@@ -130,7 +128,7 @@ def check_front_page(subreddit):
 
 if __name__ == "__main__":
     logger.info("Connecting to Reddit...")
-    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
     check_front_page(subreddit)
     update_traffic(subreddit)

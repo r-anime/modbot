@@ -6,11 +6,12 @@ Will send a notification to Discord if the action was taken by someone not previ
 import argparse
 from datetime import datetime, timedelta, timezone
 import time
+from typing import Optional
 
-import praw
 from praw.models.mod_action import ModAction
 
 import config_loader
+from constants import mod_constants
 from data.mod_action_data import ModActionModel
 from services import base_data_service, comment_service, mod_action_service, post_service, user_service
 from utils import discord, reddit as reddit_utils
@@ -31,6 +32,36 @@ def parse_mod_action(mod_action: ModAction):
     one of the two entry points (monitor_stream or load_archive).
     """
 
+    def _format_action_embed_field(mod_action_model: ModActionModel = None) -> Optional[dict]:
+        """By default use the parent mod_action, use provided mod_action_model if provided."""
+
+        if mod_action_model:
+            created_timestamp = int(mod_action_model.created_time.timestamp())
+            mod_name = mod_action_model.mod
+            details = mod_action_model.details
+            action = mod_action_model.action
+        else:
+            created_timestamp = int(mod_action.created_utc)
+            mod_name = mod_action.mod.name
+            details = mod_action.details
+            action = mod_action.action
+
+        field = {"inline": True, "value": f"<t:{created_timestamp}:t>"}
+
+        if mod_name in ("AutoModerator", "reddit"):
+            field["value"] = details
+
+        if action == mod_constants.ModActionEnum.approve_post.value:
+            field["name"] = f"Approved By {mod_name}"
+        elif action == mod_constants.ModActionEnum.remove_post.value:
+            field["name"] = f"Removed By {mod_name}"
+        elif action == mod_constants.ModActionEnum.spam_post.value:
+            field["name"] = f"Spammed By {mod_name}"
+        else:
+            return None
+
+        return field
+
     # Check if we've already processed this mod action, do nothing if so.
     mod_action_id = mod_action.id.replace("ModAction_", "")
     if mod_action_service.get_mod_action_by_id(mod_action_id):
@@ -45,6 +76,9 @@ def parse_mod_action(mod_action: ModAction):
     # If there's an action by an unknown moderator or admin, make a note of it and check to see
     # if they should be added to the mod list.
     send_notification = False
+    if mod_action.action in mod_constants.MOD_ACTIONS_ALWAYS_NOTIFY:
+        send_notification = True
+
     if mod_action.mod.name not in active_mods:
         # Add them to the database if necessary.
         mod_user = user_service.get_user(mod_action.mod.name)
@@ -53,7 +87,15 @@ def parse_mod_action(mod_action: ModAction):
 
         # We'd normally send a notification for all actions from non-mods, but temporary mutes expiring
         # always come from reddit and we don't really care about those.
-        if not (mod_action.mod.name == "reddit" and mod_action.action == "unmuteuser"):
+        # Similarly, crowd control removals as those are filtered to the mod queue.
+        if not (
+            (mod_action.mod.name == "reddit" and mod_action.action == "unmuteuser")
+            or (
+                mod_action.mod.name == "reddit"
+                and mod_action.action in ("removecomment", "removelink")
+                and mod_action.details == "Crowd Control"
+            )
+        ):
             send_notification = True
 
         # For non-admin cases, check to see if they're a [new] mod of the subreddit and refresh the list if so.
@@ -93,6 +135,11 @@ def parse_mod_action(mod_action: ModAction):
         elif mod_action.action == "unbanuser":
             user.banned_until = None
             base_data_service.update(user)
+        elif mod_action.action == "removemoderator":
+            logger.debug(f"Updating mod status for {user}")
+            user.moderator = False
+            base_data_service.update(user)
+            _get_moderators()
 
     # See if the post targeted by this action exists in the system, add it if not.
     if mod_action.target_fullname and mod_action.target_fullname.startswith("t3_"):
@@ -107,10 +154,45 @@ def parse_mod_action(mod_action: ModAction):
         else:
             post = post_service.update_post(post, reddit_post)
 
+        # Send post to the feed if it hasn't been yet or if it needs an update.
+        if (
+            mod_action.action in mod_constants.MOD_ACTIONS_POST_FEED_UPDATE and post.discord_message_id
+        ) or not post.sent_to_feed:
+            discord_embed = post_service.format_post_embed(post)
+
+            # For cases where this action isn't removing/approving we want to grab the last action that *was*
+            # to appropriately show in the feed.
+            action_list = [
+                mod_constants.ModActionEnum.approve_post.value,
+                mod_constants.ModActionEnum.remove_post.value,
+                mod_constants.ModActionEnum.spam_post.value,
+            ]
+            if mod_action.action in action_list:
+                previous_action = None
+            else:
+                previous_action = mod_action_service.get_most_recent_approve_remove_by_post(post)
+
+            action_field = _format_action_embed_field(previous_action)
+            if action_field:
+                discord_embed["fields"].append(action_field)
+
+            if not post.sent_to_feed:
+                discord_message_id = discord.send_webhook_message(
+                    config_loader.DISCORD["post_webhook_url"], {"embeds": [discord_embed]}, return_message_id=True
+                )
+                if discord_message_id:
+                    post.sent_to_feed = True
+                    post.discord_message_id = discord_message_id
+            else:
+                discord.update_webhook_message(
+                    config_loader.DISCORD["post_webhook_url"], post.discord_message_id, {"embeds": [discord_embed]}
+                )
+
         # If the user deleted their text post, the mod action still has the post body that we can save in place.
         if post.deleted and post.body == "[deleted]" and post.body != mod_action.target_body:
             post.body = mod_action.target_body
-            base_data_service.update(post)
+
+        base_data_service.update(post)
 
     # See if the comment targeted by this action *and its post* exist in the system, add either if not.
     if mod_action.target_fullname and mod_action.target_fullname.startswith("t1_"):
@@ -193,9 +275,11 @@ def monitor_stream():
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             _get_moderators()
+            logger.info("Loading flairs...")
+            post_service.load_post_flairs(subreddit)
             logger.info("Starting mod log stream...")
             for mod_action in subreddit.mod.stream.log():
                 parse_mod_action(mod_action)
@@ -226,7 +310,7 @@ def load_archive(archive_args: argparse.Namespace):
         before_action_id = "ModAction_" + before_action_id
 
     global reddit, subreddit
-    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
 
     current_id = before_action_id if before_action_id else [log.id for log in subreddit.mod.log(limit=1)][0]
@@ -238,7 +322,7 @@ def load_archive(archive_args: argparse.Namespace):
         try:
             logger.info("Connecting to Reddit...")
             # Since the parse_mod_action function relies on reddit and subreddit existing in the global scope.
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             # Not exactly sure of behavior when running past what's available, but this attempts to track when there
             # aren't any processed so we can reasonably drop out.

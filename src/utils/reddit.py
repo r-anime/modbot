@@ -1,16 +1,20 @@
 """Utilities regarding Reddit posts/users/etc"""
 
-from typing import Optional
+import copy
+from typing import Optional, TYPE_CHECKING
 
+import mintotp
 import praw
-from praw.models.reddit.subreddit import Subreddit
 
 import config_loader
-from data.base_data import BaseModel
+
+if TYPE_CHECKING:
+    from praw.models.reddit.subreddit import Subreddit
+    from data.base_data import BaseModel
 
 
 reddit: Optional[praw.Reddit] = None
-subreddit: Optional[Subreddit] = None
+subreddit: Optional["Subreddit"] = None
 
 _b36_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
 
@@ -44,7 +48,7 @@ def base36decode(number):
     return int(number, 36)
 
 
-def make_permalink(model: BaseModel) -> str:
+def make_permalink(model: "BaseModel") -> str:
     # Avoiding circular imports.
     from data.comment_data import CommentModel
     from data.post_data import PostModel
@@ -64,9 +68,28 @@ def make_permalink(model: BaseModel) -> str:
     raise TypeError(f"Unknown model {model.__class__}")
 
 
+def get_reddit_instance(config_dict: dict):
+    """
+    Initialize a reddit instance and return it.
+
+    :param config_dict: dict containing necessary values for authenticating
+    :return: reddit instance
+    """
+
+    auth_dict = copy.copy(config_dict)
+    password = config_dict["password"]
+    totp_secret = config_dict.get("totp_secret")
+
+    if totp_secret:
+        auth_dict["password"] = f"{password}:{mintotp.totp(totp_secret)}"
+
+    reddit_instance = praw.Reddit(**auth_dict)
+    return reddit_instance
+
+
 def initialize_reddit():
     global reddit, subreddit
-    reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+    reddit = get_reddit_instance(**config_loader.REDDIT["auth"])
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
 
 

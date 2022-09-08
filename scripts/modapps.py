@@ -10,16 +10,15 @@ import csv
 from datetime import datetime, timedelta
 import re
 
-import praw
-
 import config_loader
 from services import comment_service, post_service, mod_action_service
+from utils import reddit as reddit_utils
 
 
 username_key = "What is your Reddit username?"
 
 
-reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
 
 
 def process_row(row, activity_start_date, activity_end_date):
@@ -27,13 +26,20 @@ def process_row(row, activity_start_date, activity_end_date):
     Turns a response row into a list of one or more strings to be posted as comments.
 
     :param row: row of DictReader
+    :param activity_start_date: beginning of when to start measuring user activity on the sub
+    :param activity_end_date: when to stop measuring user activity on the sub (probably posting date of apps)
     :return: list of strings
     """
 
-    username = re.sub("/?u?/", "", row[username_key])
+    username = re.sub("/?u?/", "", row[username_key]).strip()
     print(f"Processing {username}...")
 
     response_body = f"### {username_key}\n\n> https://www.reddit.com/user/{username}\n\n"
+    ps_url = (
+        f"https://camas.unddit.com/#%7B%22author%22:%22{username}%22,"
+        + "%22subreddit%22:%22anime%22,%22resultSize%22:100%7D"
+    )
+    response_body += f"> [View comments via Pushshift]({ps_url}) (including deleted)\n\n"
 
     # Get the activity of the user both in the 90-day window prior to the posting of applications (as specified)
     # and overall history on /r/anime.
@@ -145,8 +151,10 @@ def main():
         for row in reader:
             comment_list = process_row(row, activity_window_datetime, app_announcement_datetime)
             top_level = thread.reply(comment_list[0])
+            top_level.disable_inbox_replies()
             for comment_str in comment_list[1:]:
-                top_level.reply(comment_str)
+                comment = top_level.reply(comment_str)
+                comment.disable_inbox_replies()
 
 
 if __name__ == "__main__":

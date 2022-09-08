@@ -9,7 +9,7 @@ import time
 
 import config_loader
 from constants import mod_constants
-from services import mod_action_service
+from services import comment_service, mod_action_service, post_service, traffic_service
 from utils import discord
 
 # Make a copy of both lists combined for easier use later.
@@ -30,6 +30,16 @@ def _report_monthly(report_args: argparse.Namespace):
     end_month = start_date.month + 1 if start_date.month < 12 else 1
     end_year = start_date.year if start_date.month < 12 else start_date.year + 1
     end_date = date(year=end_year, month=end_month, day=1)
+
+    total_posts = post_service.count_posts(start_date, end_date)
+    total_post_authors = post_service.count_post_authors(start_date, end_date)
+
+    total_comments = comment_service.count_comments(start_date, end_date, mod_constants.BOTS)
+    total_comment_authors = comment_service.count_comment_authors(start_date, end_date, mod_constants.BOTS)
+
+    monthly_traffic = traffic_service.get_monthly_traffic(start_date, end_date)[0]
+    total_views = monthly_traffic.total_pageviews
+    unique_views = monthly_traffic.unique_pageviews
 
     removed_posts_humans = mod_action_service.count_mod_actions(
         "removelink", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
@@ -100,15 +110,32 @@ def _report_monthly(report_args: argparse.Namespace):
         "removecomment", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.ADMINS
     )
 
+    # Adjust numbers based on crowd control filter.
+    crowd_control_removed_comments = mod_action_service.count_mod_actions(
+        "removecomment", start_date, end_date, distinct=True, details="Crowd Control", mod_accounts_list=["reddit"]
+    )
+    admin_removed_comments -= crowd_control_removed_comments
+    removed_comments_bots += crowd_control_removed_comments
+
+    crowd_control_removed_posts = mod_action_service.count_mod_actions(
+        "removelink", start_date, end_date, distinct=True, details="Crowd Control", mod_accounts_list=["reddit"]
+    )
+    admin_removed_posts -= crowd_control_removed_posts
+    removed_posts_bots += crowd_control_removed_posts
+
     meta_message = f"""Monthly Report – {start_date.strftime("%B %Y")}:
-```* Removed posts: {removed_posts_humans} by moderators, {removed_posts_bots} by bots, {removed_posts_total} distinct
-* Removed comments: {removed_comments_humans} by moderators, {removed_comments_bots} by bots, {removed_comments_total} distinct
-* Approved posts: {approved_posts}
-* Approved comments: {approved_comments}
-* Distinguished comments: {distinguished_comments}
-* Users banned: {banned_users} ({permabanned_users} permanent)
-* Users unbanned: {unbanned_users}
-* Admin/Anti-Evil Operations: removed posts: {admin_removed_posts}, removed comments: {admin_removed_comments}.```"""  # noqa: E501
+```
+- Total traffic: {total_views} pageviews, {unique_views} unique pageviews
+- Total posts: {total_posts}, {total_post_authors} unique authors
+- Total comments: {total_comments}, {total_comment_authors} unique authors (excluding mod bots)
+- Removed posts: {removed_posts_humans} by moderators, {removed_posts_bots} by bots, {removed_posts_total} distinct
+- Removed comments: {removed_comments_humans} by moderators, {removed_comments_bots} by bots, {removed_comments_total} distinct
+- Approved posts: {approved_posts}
+- Approved comments: {approved_comments}
+- Distinguished comments: {distinguished_comments}
+- Users banned: {banned_users} ({permabanned_users} permanent)
+- Users unbanned: {unbanned_users}
+- Admin/Anti-Evil Operations: removed posts: {admin_removed_posts}, removed comments: {admin_removed_comments}.```"""  # noqa: E501
 
     discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"content": meta_message})
 

@@ -20,6 +20,7 @@ REDDIT = {
         "user_agent": os.environ.get("REDDIT_USER_AGENT"),
         "username": os.environ.get("REDDIT_USERNAME"),
         "password": os.environ.get("REDDIT_USER_PASSWORD"),
+        "totp_secret": os.environ.get("REDDIT_TOTP_SECRET"),
     },
 }
 
@@ -33,6 +34,7 @@ REDIS_CONNECTION = f'redis://{os.environ.get("REDIS_HOST")}:{os.environ.get("RED
 DISCORD = {
     "enabled": os.environ.get("DISCORD_ENABLED", "False").lower() in ["true", "t", "1", "yes", "y"],  # load as bool
     "webhook_url": os.environ.get("DISCORD_WEBHOOK_URL"),
+    "post_webhook_url": os.environ.get("DISCORD_POST_WEBHOOK_URL", os.environ.get("DISCORD_WEBHOOK_URL")),
 }
 
 LOGGING = {

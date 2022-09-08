@@ -19,40 +19,40 @@ services:
 
   new_posts:
     container_name: modbot-new-posts
+    image: modbot:latest
     depends_on:
       - db
     env_file:
       template.env
-    build: .
-    command: python3 new_posts.py
+    command: python3 -m feeds.new_posts
     restart: unless-stopped
 
   new_comments:
     container_name: modbot-new-comments
+    image: modbot:latest
     depends_on:
       - db
     env_file:
       template.env
-    build: .
-    command: python3 new_comments.py
+    command: python3 -m feeds.new_comments
     restart: unless-stopped
 
   mod_log:
     container_name: modbot-mod-log
+    image: modbot:latest
     depends_on:
       - db
     env_file:
       template.env
-    build: .
-    command: python3 mod_log.py
+    command: python3 -m feeds.mod_log
     restart: unless-stopped
 
   sub_mentions:
     container_name: modbot-sub-mentions
+    image: modbot:latest
     env_file:
       template.env
-    build: .
-    command: python3 sub_mentions.py
+    command: python3 -m feeds.sub_mentions
     restart: unless-stopped
 
   worker:
@@ -68,10 +68,8 @@ services:
 
   tools:
     container_name: modbot-tools
+    image: modbot:tools
     depends_on:
       - db
     env_file:
       template.env
-    build:
-      context: .
-      dockerfile: Tools.Dockerfile

@@ -1,15 +1,15 @@
 from copy import copy
 from typing import Union
 
-from sqlalchemy import create_engine
+import psycopg2.extensions
+import psycopg2.extras
 from sqlalchemy.sql import text
 from sqlalchemy.engine.result import Row
 
-import config_loader
 from data.session import session_scope
 
 
-_engine = create_engine(config_loader.DB_CONNECTION)
+psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)  # To use a dict for a jsonb column, errors without.
 
 
 class BaseModel:

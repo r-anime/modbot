@@ -84,3 +84,61 @@ class CommentData(BaseData):
 
         result_rows = self.execute(sql, **sql_kwargs)
         return [CommentModel(row) for row in result_rows]
+
+    def get_comment_count(self, start_date: str = None, end_date: str = None, exclude_authors: list = None) -> int:
+        where_clauses = []
+        sql_kwargs = {}
+
+        if start_date:
+            where_clauses.append("created_time >= :start_date")
+            sql_kwargs["start_date"] = start_date
+
+        if end_date:
+            where_clauses.append("created_time < :end_date")
+            sql_kwargs["end_date"] = end_date
+
+        if exclude_authors is not None:
+            where_clauses.append("author not in :exclude_authors")
+            sql_kwargs["exclude_authors"] = tuple(exclude_authors)
+
+        where_str = " AND ".join(where_clauses)
+        sql = text(
+            f"""
+        SELECT COUNT(*) FROM comments
+        WHERE {where_str};
+        """
+        )
+
+        # Will return a list of tuples with only one item in each, e.g. [(2910,)]
+        result = self.execute(sql, **sql_kwargs)
+        return result[0][0]
+
+    def get_comment_author_count(
+        self, start_date: str = None, end_date: str = None, exclude_authors: list = None
+    ) -> int:
+        where_clauses = []
+        sql_kwargs = {}
+
+        if start_date:
+            where_clauses.append("created_time >= :start_date")
+            sql_kwargs["start_date"] = start_date
+
+        if end_date:
+            where_clauses.append("created_time < :end_date")
+            sql_kwargs["end_date"] = end_date
+
+        if exclude_authors is not None:
+            where_clauses.append("author not in :exclude_authors")
+            sql_kwargs["exclude_authors"] = tuple(exclude_authors)
+
+        where_str = " AND ".join(where_clauses)
+        sql = text(
+            f"""
+        SELECT COUNT(DISTINCT author) FROM comments
+        WHERE {where_str};
+        """
+        )
+
+        # Will return a list of tuples with only one item in each, e.g. [(2910,)]
+        result = self.execute(sql, **sql_kwargs)
+        return result[0][0]

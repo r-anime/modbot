@@ -5,9 +5,8 @@ Migrates user flairs from old CSS system to new emoji system.
 import re
 import time
 
-import praw
-
 import config_loader
+from utils import reddit as reddit_utils
 from utils.logger import logger
 
 
@@ -87,7 +86,7 @@ def migrate_flairs():
     while True:
         try:
             logger.info("Connecting to Reddit...")
-            reddit = praw.Reddit(**config_loader.REDDIT["auth"])
+            reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             logger.info("Loading flairs...")
             # Generator will load in batches of 1000 from Reddit, this covers the entire sub.

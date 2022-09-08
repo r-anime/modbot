@@ -1,6 +1,7 @@
-praw==7.5.0
-psycopg2-binary==2.9.1
-requests==2.26.0
+praw==7.6.0
+psycopg2-binary==2.9.3
+requests==2.27.1
 SQLAlchemy==1.4.25
-python-dotenv==0.19.0
+python-dotenv==0.20.0
 celery[redis]==5.2.3
+mintotp==0.3.0
