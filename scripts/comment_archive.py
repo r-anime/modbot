@@ -45,17 +45,42 @@ def save_comments(reddit_submission: Submission):
             time.sleep(5)
 
     logger.info(f"Processing comments on {post_name}")
-    index = -1
-    for index, reddit_comment in enumerate(reddit_submission.comments.list()):
-        # Since all comments will reference a parent if it exists, add all parent comments first.
-        logger.debug(f"Saving parent comments of {reddit_comment.id}")
-        comment_service.add_comment_parent_tree(reddit, reddit_comment)
-        logger.debug(f"Saving comment {reddit_comment.id}")
-        comment_service.add_comment(reddit_comment)
-        if (index + 1) % 500 == 0:
-            logger.info(f"Completed {index + 1} comments on {post_name}")
+    processed_comment_ids = []
+    comment_list = list(reddit_submission.comments.list())
+    processed_any = False
+    # Loop through and add all top-level comments, then all of their children, etc. in order for efficiency.
+    while comment_list:
+        for reddit_comment in comment_list:
+            if reddit_comment.is_root:
+                comment_service.add_comment(reddit_comment)
+                comment_list.remove(reddit_comment)
+                processed_comment_ids.append(reddit_comment.id)
+                if len(processed_comment_ids) % 500 == 0:
+                    logger.info(f"Completed {len(processed_comment_ids)} comments on {post_name}")
+                processed_any = True
+                continue
+            parent_id = reddit_comment.parent_id.split("t1_")[1]
+            if parent_id in processed_comment_ids:
+                comment_service.add_comment(reddit_comment)
+                comment_list.remove(reddit_comment)
+                processed_comment_ids.append(reddit_comment.id)
+                if len(processed_comment_ids) % 500 == 0:
+                    logger.info(f"Completed {len(processed_comment_ids)} comments on {post_name}")
+                processed_any = True
+                continue
+        # There may be some odd cases that won't be handled by this process so add a check to avoid infinite looping.
+        if not processed_any:
+            break
 
-    logger.info(f"Finished processing {post_name}, total {index + 1} comments")
+    # If there are any left, go through the slower process crawling up the tree to clean up any leftovers.
+    for index, reddit_comment in enumerate(comment_list):
+        comment_service.add_comment_parent_tree(reddit, reddit_comment)
+        comment_service.add_comment(reddit_comment)
+        processed_comment_ids.append(reddit_comment.id)
+        if len(processed_comment_ids) % 500 == 0:
+            logger.info(f"Completed {len(processed_comment_ids)} comments on {post_name}")
+
+    logger.info(f"Finished processing {post_name}, total {len(processed_comment_ids)} comments")
 
 
 def load_post_by_id(post_id: str):
