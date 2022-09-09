@@ -171,7 +171,7 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
         post.flair_text = reddit_post.link_flair_text
 
     # In 2022 Reddit began allowing text bodies with other types of posts so now both are checked separately.
-    if reddit_post.selftext:
+    if getattr(reddit_post, "selftext", None):
         post.body = reddit_post.selftext
 
     # Permalink will be part of the URL for text-only posts, e.g.

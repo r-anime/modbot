@@ -98,7 +98,7 @@ def load_post_list_file(archive_file_path: str):
             time.sleep(30)
 
 
-def load_posts_from_dates(start_date: datetime, end_date: datetime):
+def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bool = False):
     """
     Saves all posts made in the specified time frame.
     """
@@ -135,7 +135,18 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime):
         else:
             post_service.add_post(ps_post)
 
-    post_fullname_list = [f"t3_{post.id}" for post in post_list]
+    # Don't add CDF/FTF threads to the list of posts to get comments for if flag is set.
+    if skip_cdf:
+        post_fullname_list = []
+        for post in post_list:
+            if (
+                post.title.startswith("Casual Discussion Fridays") or post.title.startswith("Free Talk Fridays")
+            ) and post.author.lower() in ("animemod", "automoderator"):
+                logger.info(f"Skipping getting comments for {post.permalink}")
+                continue
+            post_fullname_list.append(f"t3_{post.id}")
+    else:
+        post_fullname_list = [f"t3_{post.id}" for post in post_list]
     reddit_post_list = reddit.info(fullnames=post_fullname_list)
     for reddit_post in reddit_post_list:
         try:
@@ -172,6 +183,12 @@ def _get_parser() -> argparse.ArgumentParser:
         "-c", "--comments", action="store_true", default=False, help="Gather comments (for date only)"
     )
     new_parser.add_argument("-p", "--posts", action="store_true", default=False, help="Gather posts (for date only)")
+    new_parser.add_argument(
+        "--skip_cdf",
+        action="store_true",
+        default=False,
+        help="Don't add comments from Casual Discussion Fridays / Free Talk Fridays threads",
+    )
     return new_parser
 
 
@@ -188,7 +205,7 @@ if __name__ == "__main__":
         if not (args.posts or args.comments):
             raise ValueError("Must provide --posts and/or --comments with date values.")
         if args.posts:
-            load_posts_from_dates(args.start_date, args.end_date)
+            load_posts_from_dates(args.start_date, args.end_date, skip_cdf=args.skip_cdf)
         if args.comments:
             load_comments_from_dates(args.start_date, args.end_date)
     else:
