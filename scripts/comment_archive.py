@@ -154,7 +154,7 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
                 post.author = ps_post.author
                 if not user_service.get_user(post.author):
                     user_service.add_user(post.author)
-            if post.body == "[deleted]" and ps_post.selftext not in ("[deleted]", "[removed]"):
+            if post.body == "[deleted]" and getattr(ps_post, "selftext", None) not in ("[deleted]", "[removed]", None):
                 post.body = ps_post.selftext
             base_data_service.update(post)
         else:
