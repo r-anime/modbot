@@ -143,6 +143,7 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
         )
     )
     post_list = ps_list[::-1]  # reverse to go in chronological ascending order
+    total_posts = len(post_list)
 
     logger.info(f"Found {len(post_list)} posts between {start_date.isoformat()} and {end_date.isoformat()}")
     for ps_post in post_list:
@@ -161,6 +162,7 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
             post_service.add_post(ps_post)
 
     # Don't add CDF/FTF threads to the list of posts to get comments for if flag is set.
+    skipped_posts = 0
     if skip_cdf:
         post_fullname_list = []
         for post in post_list:
@@ -168,17 +170,26 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
                 post.title.startswith("Casual Discussion Fridays") or post.title.startswith("Free Talk Fridays")
             ) and post.author.lower() in ("animemod", "automoderator"):
                 logger.info(f"Skipping getting comments for {post.permalink}")
+                skipped_posts += 1
                 continue
             post_fullname_list.append(f"t3_{post.id}")
     else:
         post_fullname_list = [f"t3_{post.id}" for post in post_list]
+
+    processed_posts = 0
+    error_posts = []
     reddit_post_list = reddit.info(fullnames=post_fullname_list)
     for reddit_post in reddit_post_list:
         try:
             save_comments(reddit_post)
+            processed_posts += 1
         except Exception:
             logger.exception(f"Unable to save comments on {reddit_post.id}, continuing in 30 seconds...")
+            error_posts.append(reddit_post.id)
             time.sleep(30)
+    logger.info(f"Finished with {processed_posts} processed, {skipped_posts} skipped, {total_posts} total.")
+    if error_posts:
+        logger.warning(f"Error posts: {', '.join(error_posts)}")
 
 
 def load_comments_from_dates(start_date: datetime, end_date: datetime):
