@@ -12,12 +12,7 @@ from utils import reddit as reddit_utils
 from utils.logger import logger
 
 
-# Current reddit session and subreddit, initialized when first starting up or after an error.
-reddit = None
-subreddit = None
-
-
-def process_comment(reddit_comment: Comment):
+def process_comment(reddit_comment: Comment, reddit):
     """
     Process a single PRAW Comment. Adds it to the database if it didn't previously exist as well as parent comments
     and the thread it belongs to.
@@ -45,7 +40,7 @@ def process_comment(reddit_comment: Comment):
     logger.debug(f"Saving comment {reddit_comment.id}")
     comment = comment_service.add_comment(reddit_comment)
 
-    logger.debug(f"Finished processing {comment.id}")
+    logger.debug(f"Finished processing {comment.id36}")
 
 
 def monitor_stream():
@@ -53,7 +48,6 @@ def monitor_stream():
     Monitor the subreddit for new comments and parse them when they come in. Will restart upon encountering an error.
     """
 
-    global reddit, subreddit
     while True:
         try:
             logger.info("Connecting to Reddit...")
@@ -61,7 +55,7 @@ def monitor_stream():
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
             logger.info("Starting comment stream...")
             for comment in subreddit.stream.comments(skip_existing=False):
-                process_comment(comment)
+                process_comment(comment, reddit)
         except Exception:
             delay_time = 30
             logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")

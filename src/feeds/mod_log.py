@@ -21,12 +21,8 @@ from utils.logger import logger
 # Cache a list of moderator usernames so we can tell if an action is taken by admins.
 active_mods = []
 
-# Current reddit session and subreddit, initialized when first starting up or after an error.
-reddit = None
-subreddit = None
 
-
-def parse_mod_action(mod_action: ModAction):
+def parse_mod_action(mod_action: ModAction, reddit, subreddit):
     """
     Process a single PRAW ModAction. Assumes that reddit and subreddit are already instantiated by
     one of the two entry points (monitor_stream or load_archive).
@@ -105,7 +101,7 @@ def parse_mod_action(mod_action: ModAction):
                 logger.debug(f"Updating mod status for {mod_user}")
                 mod_user.moderator = True
                 base_data_service.update(mod_user)
-                _get_moderators()
+                get_moderators()
 
     # See if the user targeted by this action exists in the system, add them if not.
     # Bans and similar user-focused actions independent of posts/comments will also have
@@ -139,7 +135,7 @@ def parse_mod_action(mod_action: ModAction):
             logger.debug(f"Updating mod status for {user}")
             user.moderator = False
             base_data_service.update(user)
-            _get_moderators()
+            get_moderators()
 
     # See if the post targeted by this action exists in the system, add it if not.
     if mod_action.target_fullname and mod_action.target_fullname.startswith("t3_"):
@@ -271,18 +267,17 @@ def monitor_stream():
     Monitor the subreddit for new actions and parse them when they come in. Will restart upon encountering an error.
     """
 
-    global reddit, subreddit
     while True:
         try:
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
-            _get_moderators()
+            get_moderators()
             logger.info("Loading flairs...")
             post_service.load_post_flairs(subreddit)
             logger.info("Starting mod log stream...")
             for mod_action in subreddit.mod.stream.log():
-                parse_mod_action(mod_action)
+                parse_mod_action(mod_action, reddit, subreddit)
         except Exception:
             delay_time = 30
             logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")
@@ -309,7 +304,6 @@ def load_archive(archive_args: argparse.Namespace):
     if before_action_id and not before_action_id.startswith("ModAction_"):
         before_action_id = "ModAction_" + before_action_id
 
-    global reddit, subreddit
     reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
     subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
 
@@ -336,7 +330,7 @@ def load_archive(archive_args: argparse.Namespace):
                         current_timestamp = mod_action.created_utc
                         break
 
-                    parse_mod_action(mod_action)
+                    parse_mod_action(mod_action, reddit, subreddit)
                     actions_processed += 1
 
                     # The earliest action in the batch and will be the start of the next loop.
@@ -363,7 +357,7 @@ def load_archive(archive_args: argparse.Namespace):
             time.sleep(delay_time)
 
 
-def _get_moderators():
+def get_moderators():
     """Initializes the list of currently active moderators."""
 
     # Clear out the previous list in case something changed.
@@ -396,7 +390,7 @@ if __name__ == "__main__":
     parser = _get_parser()
     args = parser.parse_args()
     # Load mod list regardless of what's next.
-    _get_moderators()
+    get_moderators()
     if args.archive:
         # Load earlier mod actions.
         load_archive(args)

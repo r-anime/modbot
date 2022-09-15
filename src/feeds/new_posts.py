@@ -1,5 +1,5 @@
 """
-Monitors a subreddit and relays every new submission to a Discord channel via webhook.
+Monitors a subreddit, saves every new submission, and relays them to a Discord channel via webhook.
 """
 
 import time
@@ -10,11 +10,6 @@ import config_loader
 from services import post_service, base_data_service
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
-
-
-# Current reddit session and subreddit, initialized when first starting up or after an error.
-reddit = None
-subreddit = None
 
 
 def process_post(submission: Submission):
@@ -37,6 +32,10 @@ def process_post(submission: Submission):
         post = post_service.add_post(submission)
 
     discord_embed = post_service.format_post_embed(post)
+    # Add extra info if it was removed by the spam filter.
+    if getattr(submission, "banned_by", False) is True:
+        field = {"inline": True, "value": "spam filter", "name": "Removed By reddit"}
+        discord_embed["fields"].append(field)
     discord_message_id = discord.send_webhook_message(
         config_loader.DISCORD["post_webhook_url"], {"embeds": [discord_embed]}, return_message_id=True
     )
@@ -46,7 +45,7 @@ def process_post(submission: Submission):
 
     base_data_service.update(post)
 
-    logger.debug(f"Finished processing {submission.id}")
+    logger.debug(f"Finished processing {post.id36}")
 
 
 def monitor_stream():
@@ -54,7 +53,6 @@ def monitor_stream():
     Monitor the subreddit for new posts and parse them when they come in. Will restart upon encountering an error.
     """
 
-    global reddit, subreddit
     while True:
         try:
             logger.info("Connecting to Reddit...")

@@ -177,7 +177,8 @@ def _create_comment_model(reddit_comment: Comment) -> CommentModel:
     if reddit_comment.author is None and reddit_comment.body in ("[deleted]", "[removed]"):
         comment.deleted = True
 
-    # Unlike with posts, removed is still true if the post has been removed and deleted.
-    comment.removed = True if getattr(reddit_comment, "removed", False) else False
+    # removed is *not* accurate if the comment has been removed by the spam filter or AutoModerator
+    # so banned_by is used instead (moderator name or True for spam filter).
+    comment.removed = True if getattr(reddit_comment, "banned_by", False) else False
 
     return comment

@@ -148,7 +148,8 @@ def load_post_flairs(subreddit):
     for flair in flair_list:
         color_hex = flair["background_color"].replace("#", "")
         _flair_colors[flair["id"]] = int(color_hex, base=16)
-    logger.info(f"Flairs loaded: {_flair_colors}")
+    logger.info(f"Loaded post flairs from {subreddit.display_name_prefixed}")
+    logger.debug(f"Flairs loaded: {_flair_colors}")
 
 
 def _create_post_model(reddit_post: Submission) -> PostModel:
@@ -174,10 +175,8 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
     if getattr(reddit_post, "selftext", None):
         post.body = reddit_post.selftext
 
-    # Permalink will be part of the URL for text-only posts, e.g.
-    # url: https://www.reddit.com/r/anime/comments/x58lz5/meta_thread_month_of_september_04_2022/
-    # permalink: /r/anime/comments/x58lz5/meta_thread_month_of_september_04_2022/
-    if not reddit_post.url.endswith(reddit_post.permalink):
+    # Non-self posts should have a URL. It'll be None if the post is deleted but that'll be flagged separately below.
+    if not reddit_post.is_self:
         post.url = reddit_post.url
 
     metadata = {"nsfw": getattr(reddit_post, "over_18", False), "spoiler": getattr(reddit_post, "spoiler", False)}

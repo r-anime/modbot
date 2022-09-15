@@ -29,6 +29,13 @@ def _setup_logging():
     console_handler.setFormatter(formatter)
 
     logger.addHandler(console_handler)
+    # Optional logging for PRAW.
+    # for logger_name in ("praw", "prawcore"):
+    #     logger = logging.getLogger(logger_name)
+    #     logger.setLevel(logging.DEBUG)
+    #     logger.addHandler(console_handler)
+    #     if log_file_path:
+    #         logger.addHandler(file_handler)
 
 
 if logger is None:
