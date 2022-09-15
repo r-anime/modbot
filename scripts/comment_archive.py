@@ -144,22 +144,31 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
     )
     post_list = ps_list[::-1]  # reverse to go in chronological ascending order
     total_posts = len(post_list)
+    error_posts = []
 
     logger.info(f"Found {len(post_list)} posts between {start_date.isoformat()} and {end_date.isoformat()}")
     for ps_post in post_list:
         if ps_post.subreddit != config_loader.REDDIT["subreddit"]:
             continue
-        post = post_service.get_post_by_id(ps_post.id)
-        if post:
-            if post.author is None:
-                post.author = ps_post.author
-                if not user_service.get_user(post.author):
-                    user_service.add_user(post.author)
-            if post.body == "[deleted]" and getattr(ps_post, "selftext", None) not in ("[deleted]", "[removed]", None):
-                post.body = ps_post.selftext
-            base_data_service.update(post)
-        else:
-            post_service.add_post(ps_post)
+        try:
+            post = post_service.get_post_by_id(ps_post.id)
+            if post:
+                if post.author is None:
+                    post.author = ps_post.author
+                    if not user_service.get_user(post.author):
+                        user_service.add_user(post.author)
+                if post.body == "[deleted]" and getattr(ps_post, "selftext", None) not in (
+                    "[deleted]",
+                    "[removed]",
+                    None,
+                ):
+                    post.body = ps_post.selftext
+                base_data_service.update(post)
+            else:
+                post_service.add_post(ps_post)
+        except Exception:
+            logger.exception(f"Unable to save or update post {ps_post.id}")
+            error_posts.append(ps_post.id)
 
     # Don't add CDF/FTF threads to the list of posts to get comments for if flag is set.
     skipped_posts = 0
@@ -189,7 +198,7 @@ def load_posts_from_dates(start_date: datetime, end_date: datetime, skip_cdf: bo
             time.sleep(30)
     logger.info(f"Finished with {processed_posts} processed, {skipped_posts} skipped, {total_posts} total.")
     if error_posts:
-        logger.warning(f"Error posts: {', '.join(error_posts)}")
+        logger.error(f"Errored on posts: {', '.join(error_posts)}")
 
 
 def load_comments_from_dates(start_date: datetime, end_date: datetime):
