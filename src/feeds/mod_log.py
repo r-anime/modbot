@@ -225,7 +225,7 @@ def parse_mod_action(mod_action: ModAction, reddit, subreddit):
 
 
 def send_discord_message(mod_action: ModActionModel):
-    logger.info(f"Attempting to send a message to Discord for {mod_action}")
+    logger.info(f"Sending a message to Discord for {mod_action}")
 
     embed_json = {
         "author": {
@@ -259,7 +259,7 @@ def send_discord_message(mod_action: ModActionModel):
         desc_info = {"name": "Description", "value": mod_action.description}
         embed_json["fields"].append(desc_info)
 
-    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
+    discord.send_webhook_message(config_loader.DISCORD["mod_log_webhook_url"], {"embeds": [embed_json]})
 
 
 def monitor_stream():
