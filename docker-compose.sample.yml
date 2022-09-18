@@ -10,6 +10,16 @@ services:
       - "5432:5432"
     restart: unless-stopped
 
+  all_feeds:
+    container_name: modbot-all-feeds
+    image: modbot:latest
+    depends_on:
+      - db
+    env_file:
+      template.env
+    command: python3 -m feeds.consolidated --posts --comments --mod_log
+    restart: unless-stopped
+
   new_posts:
     container_name: modbot-new-posts
     image: modbot:latest
