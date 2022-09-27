@@ -24,6 +24,10 @@ class CommentModel(BaseModel):
         "removed",
     ]
 
+    @property
+    def fullname(self):
+        return f"t1_{self.id36}"
+
     def set_id(self, id_base36: str):
         """Sets both base 10 and base 36 forms of the id field."""
         self.id = base36decode(id_base36)

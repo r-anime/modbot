@@ -222,6 +222,7 @@ def _create_post_model(reddit_post: Submission) -> PostModel:
     # or "moderator" if it's been removed by a mod but not deleted.
     if getattr(reddit_post, "removed_by_category", "") == "deleted":
         post.deleted = True
+        post.deleted_time = datetime.now(tz=timezone.utc)
 
     # removed is *not* accurate if the post has been deleted, so banned_by is used instead.
     # banned_by will have a mod name if the post was removed even if it's also been deleted.

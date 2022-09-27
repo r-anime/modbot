@@ -24,10 +24,15 @@ class PostModel(BaseModel):
         "edited",
         "distinguished",
         "deleted",
+        "deleted_time",
         "removed",
         "sent_to_feed",
         "discord_message_id",
     ]
+
+    @property
+    def fullname(self):
+        return f"t3_{self.id36}"
 
     def set_id(self, id_base36: str):
         """Sets both base 10 and base 36 forms of the id field."""
