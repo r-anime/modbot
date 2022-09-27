@@ -59,7 +59,7 @@ def save_comments(reddit_submission: Submission):
                     logger.info(f"Completed {len(processed_comment_ids)} comments on {post_name}")
                 processed_any = True
                 continue
-            parent_id = reddit_comment.parent_id.split("t1_")[1]
+            parent_id = reddit_comment.parent_id[3:]
             if parent_id in processed_comment_ids:
                 comment_service.add_comment(reddit_comment)
                 comment_list.remove(reddit_comment)
@@ -205,7 +205,95 @@ def load_comments_from_dates(start_date: datetime, end_date: datetime):
     """
     Saves all comments made in the specified time frame.
     """
-    pass
+    global ps_api, reddit, subreddit
+
+    reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
+    subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+    ps_api = psaw.PushshiftAPI()
+
+    logger.info(f"Fetching comments between {start_date.isoformat()} and {end_date.isoformat()}")
+
+    ps_list = list(
+        ps_api.search_comments(
+            subreddit=config_loader.REDDIT["subreddit"],
+            after=int(start_date.timestamp()),
+            before=int(end_date.timestamp()),
+        )
+    )
+    comment_list = ps_list[::-1]  # reverse to go in chronological ascending order
+    total_comments = len(comment_list)
+    error_comments = []
+
+    logger.info(f"Found {total_comments} comments between {start_date.isoformat()} and {end_date.isoformat()}")
+
+    missing_post_fullnames = []
+
+    # First pass just to check for missing posts.
+    for ps_comment in comment_list:
+        if ps_comment.subreddit != config_loader.REDDIT["subreddit"]:
+            continue
+
+        # If we're already retrieving the parent post, move on for now.
+        if ps_comment.link_id in missing_post_fullnames:
+            continue
+
+        existing_post = post_service.get_post_by_id(ps_comment.link_id[3:])  # fullname, starts with t3_
+        if not existing_post:
+            missing_post_fullnames.append(ps_comment.link_id)
+
+    # Fetch and add all missing posts and their comments, similar to posts by date.
+    logger.info(f"Found {len(missing_post_fullnames)} missing posts, adding...")
+    processed_posts = 0
+    error_posts = []
+    reddit_post_list = reddit.info(fullnames=missing_post_fullnames)
+    for reddit_post in reddit_post_list:
+        try:
+            post_service.add_post(reddit_post)
+            save_comments(reddit_post)
+            processed_posts += 1
+        except Exception:
+            logger.exception(f"Unable to save comments on {reddit_post.id}, continuing in 30 seconds...")
+            error_posts.append(reddit_post.id)
+            time.sleep(30)
+    logger.info(f"Finished missed posts with {processed_posts} processed, {len(error_posts)} errors.")
+    if error_posts:
+        logger.error(f"Errored on posts: {', '.join(error_posts)}")
+
+    # Do another pass on comments alone.
+    processed_comments = {}
+    for ps_comment in comment_list:
+        try:
+            # Just update if it exists in the database already.
+            existing_comment = comment_service.get_comment_by_id(ps_comment.id)
+            if existing_comment:
+                comment_service.update_comment(existing_comment, ps_comment)
+                continue
+
+            # Otherwise ensure parents are also in the database before adding.
+            comment_service.add_comment_parent_tree(reddit, ps_comment)
+            added_comment = comment_service.add_comment(ps_comment)
+            processed_comments[added_comment.id36] = added_comment
+        except Exception:
+            logger.exception(f"Unable to save comment {ps_comment.id}, continuing in 30 seconds...")
+            error_comments.append(ps_comment.id)
+            time.sleep(30)
+    logger.info(f"Finished {len(processed_comments)} comments from Pushshift, updating now.")
+
+    # Final pass with retrieving reddit comments to check for deletions/updates
+    processed_comment_count = 0
+    reddit_comment_list = reddit.info(fullnames=[comment.fullname for comment in processed_comments.values()])
+    for reddit_comment in reddit_comment_list:
+        try:
+            current_comment = processed_comments[reddit_comment.id]
+            comment_service.update_comment(current_comment, reddit_comment)
+            processed_comment_count += 1
+        except Exception:
+            logger.exception(f"Unable to update comment {reddit_comment.id}, continuing in 30 seconds...")
+            error_comments.append(reddit_comment.id)
+            time.sleep(30)
+    logger.info(f"Finished with {processed_comment_count} checked/updated.")
+    if error_comments:
+        logger.error(f"Errored on comments: {', '.join(error_comments)}")
 
 
 def _get_parser() -> argparse.ArgumentParser:

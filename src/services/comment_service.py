@@ -66,11 +66,11 @@ def add_comment(reddit_comment: Comment) -> CommentModel:
     comment = _create_comment_model(reddit_comment)
 
     # Insert the author into the database if they don't exist yet.
-    if reddit_comment.author is not None and not user_service.get_user(reddit_comment.author.name):
+    if reddit_comment.author is not None and not user_service.get_user(reddit_comment.author):
         user_service.add_user(reddit_comment.author)
 
-    # Insert post into the database if it doesn't exist yet.
-    if not post_service.get_post_by_id(reddit_comment.submission.id):
+    # Insert post into the database if it doesn't exist yet (and we have it available).
+    if isinstance(reddit_comment, Comment) and not post_service.get_post_by_id(reddit_comment.submission.id):
         post_service.add_post(reddit_comment.submission)
 
     new_comment = _comment_data.insert(comment, error_on_conflict=False)
@@ -84,12 +84,20 @@ def update_comment(existing_comment: CommentModel, reddit_comment: Comment) -> C
 
     new_comment = _create_comment_model(reddit_comment)
 
+    # Insert the author into the database if they don't exist yet.
+    if (
+        existing_comment.author is None
+        and reddit_comment.author is not None
+        and not user_service.get_user(reddit_comment.author)
+    ):
+        user_service.add_user(reddit_comment.author)
+
     # Fields that shouldn't be updated since they won't change.
-    non_update_fields = ["author"]
+    non_update_fields = ["author"] if existing_comment.author else []
 
     # If a user has deleted their post or admins took it down we don't want to overwrite the original text.
     # Removals by "anti_evil_ops" or "moderator" are fine since those don't change the body.
-    if reddit_comment.removal_reason in ("legal",):
+    if getattr(reddit_comment, "removal_reason", None) in ("legal",) or reddit_comment.author is None:
         non_update_fields.append("body")
 
     for field in new_comment.columns:
@@ -119,8 +127,8 @@ def add_comment_parent_tree(reddit: Reddit, reddit_comment: Comment):
 
     # At the start of each loop, if we're at the top comment of the tree there will be no parents to add.
     # parent_id will return a submission for top level comments, so check is_root instead.
-    while not reddit_comment.is_root:
-        parent_id = reddit_comment.parent_id.split("t1_")[1]
+    while not reddit_comment.parent_id.startswith("t3_"):
+        parent_id = reddit_comment.parent_id[3:]
         parent_exists = get_comment_by_id(parent_id)
 
         # Once we reach a child where the parent already exists, we can stop adding new comments up the chain.
@@ -156,29 +164,37 @@ def _create_comment_model(reddit_comment: Comment) -> CommentModel:
     comment.score = reddit_comment.score
     comment.created_time = datetime.fromtimestamp(reddit_comment.created_utc, tz=timezone.utc)
     comment.body = reddit_comment.body
-    comment.post_id = base36decode(reddit_comment.submission.id)
 
-    if not reddit_comment.is_root:
-        comment.parent_id = base36decode(reddit_comment.parent_id.split("t1_")[1])
+    # PRAW vs. Pushshift differences
+    if isinstance(reddit_comment, Comment):
+        comment.post_id = base36decode(reddit_comment.submission.id)
+        # Comments by deleted users won't have an author, same for deleted comments.
+        if reddit_comment.author is not None:
+            comment.author = reddit_comment.author.name
 
-    # Comments by deleted users won't have an author, same for deleted comments.
-    if reddit_comment.author is not None:
-        comment.author = reddit_comment.author.name
+        # edited is either a timestamp or False if it hasn't been edited.
+        if reddit_comment.edited:
+            comment.edited = datetime.fromtimestamp(reddit_comment.edited, tz=timezone.utc)
 
-    # edited is either a timestamp or False if it hasn't been edited.
-    if reddit_comment.edited:
-        comment.edited = datetime.fromtimestamp(reddit_comment.edited, tz=timezone.utc)
+        # distinguished is a string (usually "moderator", maybe "admin"?) or None.
+        comment.distinguished = True if reddit_comment.distinguished else False
 
-    # distinguished is a string (usually "moderator", maybe "admin"?) or None.
-    comment.distinguished = True if reddit_comment.distinguished else False
+        # removed is *not* accurate if the comment has been removed by the spam filter or AutoModerator
+        # so banned_by is used instead (moderator name or True for spam filter).
+        comment.removed = True if getattr(reddit_comment, "banned_by", False) else False
+
+    # Pushshift version, fewer details about current status
+    else:
+        comment.post_id = base36decode(reddit_comment.link_id[3:])  # fullname, strip t3_ from start
+        comment.author = reddit_comment.author
+
+    # parent_id will be post fullname if it's a top level comment, don't want to save those.
+    if reddit_comment.parent_id.startswith("t1_"):
+        comment.parent_id = base36decode(reddit_comment.parent_id[3:])
 
     # No easy way to verify that a comment is deleted, but it's unlikely that a user would make a comment
     # with a body of "[deleted]" or "[removed]" *and* delete their account afterward.
     if reddit_comment.author is None and reddit_comment.body in ("[deleted]", "[removed]"):
         comment.deleted = True
-
-    # removed is *not* accurate if the comment has been removed by the spam filter or AutoModerator
-    # so banned_by is used instead (moderator name or True for spam filter).
-    comment.removed = True if getattr(reddit_comment, "banned_by", False) else False
 
     return comment
