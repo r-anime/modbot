@@ -112,6 +112,7 @@ class ModActionData(BaseData):
         end_time: str,
         distinct_target: str = "",
         details: str = "",
+        description: str = "",
         include_mods: list = None,
         exclude_mods: list = None,
     ) -> int:
@@ -122,6 +123,7 @@ class ModActionData(BaseData):
         :param end_time:
         :param distinct_target:
         :param details:
+        :param description:
         :param include_mods:
         :param exclude_mods:
         :return:
@@ -142,6 +144,10 @@ class ModActionData(BaseData):
         if details:
             where_clauses.append("details = :details")
             sql_kwargs["details"] = details
+
+        if description:
+            where_clauses.append("description = :description")
+            sql_kwargs["description"] = description
 
         if include_mods is not None:
             where_clauses.append("mod in :include_mods")

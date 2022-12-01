@@ -4,7 +4,7 @@ Static values about mods and mod actions that generally shouldn't need to change
 
 from enum import Enum
 
-BOTS = ["AnimeMod", "AutoModerator"]
+BOTS = ["AnimeMod", "AutoModerator", "BotDefense"]
 
 ADMINS = ["reddit", "Reddit Legal", "Anti-Evil Operations"]
 

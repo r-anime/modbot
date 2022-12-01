@@ -88,6 +88,7 @@ def count_mod_actions(
     end_time: str,
     distinct: bool = True,
     details: str = "",
+    description: str = "",
     mod_accounts_list: list = None,
     exclude_mod_accounts_list: list = None,
 ) -> int:
@@ -99,6 +100,7 @@ def count_mod_actions(
     :param end_time: count before this datetime
     :param distinct: whether to group all actions on a single target or not
     :param details: search on details field
+    :param description: search on description field
     :param mod_accounts_list: mod accounts to count actions for, defaults to all if None
     :param exclude_mod_accounts_list: mod accounts to ignore when counting
     :return: number of actions taken
@@ -110,6 +112,7 @@ def count_mod_actions(
             start_time,
             end_time,
             details=details,
+            description=description,
             include_mods=mod_accounts_list,
             exclude_mods=exclude_mod_accounts_list,
         )
@@ -130,6 +133,7 @@ def count_mod_actions(
         end_time,
         distinct_target=distinct_target,
         details=details,
+        description=description,
         include_mods=mod_accounts_list,
         exclude_mods=exclude_mod_accounts_list,
     )

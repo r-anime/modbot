@@ -37,7 +37,7 @@ def _report_monthly(report_args: argparse.Namespace):
     total_comments = comment_service.count_comments(start_date, end_date, mod_constants.BOTS)
     total_comment_authors = comment_service.count_comment_authors(start_date, end_date, mod_constants.BOTS)
 
-    monthly_traffic = traffic_service.get_monthly_traffic(start_date, end_date)[0]
+    monthly_traffic = traffic_service.get_monthly_traffic(start_date)
     total_views = monthly_traffic.total_pageviews
     unique_views = monthly_traffic.unique_pageviews
 
@@ -99,9 +99,21 @@ def _report_monthly(report_args: argparse.Namespace):
     permabanned_users = mod_action_service.count_mod_actions(
         "banuser", start_date, end_date, distinct=True, details="permanent", exclude_mod_accounts_list=_bots_and_admins
     )
+    banned_users_bots = mod_action_service.count_mod_actions(
+        "banuser", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
+    )
     unbanned_users = mod_action_service.count_mod_actions(
         "unbanuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
     )
+    unbanned_users_temp = mod_action_service.count_mod_actions(
+        "unbanuser",
+        start_date,
+        end_date,
+        distinct=True,
+        description="was temporary",
+        exclude_mod_accounts_list=_bots_and_admins,
+    )
+    actual_unbanned = unbanned_users - unbanned_users_temp
 
     admin_removed_posts = mod_action_service.count_mod_actions(
         "removelink", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.ADMINS
@@ -133,8 +145,8 @@ def _report_monthly(report_args: argparse.Namespace):
 - Approved posts: {approved_posts}
 - Approved comments: {approved_comments}
 - Distinguished comments: {distinguished_comments}
-- Users banned: {banned_users} ({permabanned_users} permanent)
-- Users unbanned: {unbanned_users}
+- Users banned: {banned_users} ({permabanned_users} permanent, {banned_users_bots} by BotDefense)
+- Users unbanned: {actual_unbanned}
 - Admin/Anti-Evil Operations: removed posts: {admin_removed_posts}, removed comments: {admin_removed_comments}.```"""  # noqa: E501
 
     discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"content": meta_message})
