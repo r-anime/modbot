@@ -244,7 +244,9 @@ def send_discord_message(mod_action: ModActionModel):
         embed_json["title"] = f"{mod_action.mod}: {mod_action.action} by {mod_action.target_user}"
     elif mod_action.target_post_id:
         target = post_service.get_post_by_id(mod_action.target_post_id)
-        title = discord.escape_formatting(f"{mod_action.mod}: {mod_action.action} - {target.title}")
+        title = discord.escape_formatting(
+            f"{mod_action.mod}: {mod_action.action} - {target.title} by {mod_action.target_user}"
+        )
         embed_json["title"] = title[:253] + "..." if len(title) > 256 else title
     elif mod_action.target_user:
         target = user_service.get_user(mod_action.target_user)
