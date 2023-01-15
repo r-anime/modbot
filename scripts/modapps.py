@@ -75,7 +75,7 @@ def process_row(row, activity_start_date, activity_end_date):
     if cdf_window or cdf_total:
         response_body += f" (including CDF: {cdf_window}, {cdf_total} since 2020-01-01)"
     else:
-        response_body += f" (no CDF activity)"
+        response_body += " (no CDF activity)"
     response_body += f" Submissions: {user_posts_window} ({user_posts_total} since 2020-01-01)\n\n"
     response_body += f"> Mod actions since 2021-01-01: {mod_actions_str}\n\n"
 
