@@ -45,9 +45,13 @@ def process_row(row, activity_start_date, activity_end_date):
     # and overall history on /r/anime.
     activity_start_time_str = activity_start_date.isoformat()
     activity_end_time_str = activity_end_date.isoformat()
-    user_comments_window = len(
+    user_comments_window_with_cdf = len(
         comment_service.get_comments_by_username(username, activity_start_time_str, activity_end_time_str)
     )
+    user_comments_window = len(
+        comment_service.get_comments_by_username(username, activity_start_time_str, activity_end_time_str, True)
+    )
+    cdf_window = user_comments_window_with_cdf - user_comments_window
     user_posts_window = len(
         post_service.get_posts_by_username(username, activity_start_time_str, activity_end_time_str)
     )
@@ -59,14 +63,20 @@ def process_row(row, activity_start_date, activity_end_date):
         mod_actions[mod_action.action].append(mod_action)
     mod_actions_str = ", ".join(f"{action} ({len(action_list)})" for action, action_list in mod_actions.items())
 
-    user_comments_total = len(comment_service.get_comments_by_username(username, "2021-06-01"))
-    user_posts_total = len(post_service.get_posts_by_username(username, "2021-06-01"))
+    user_comments_total_with_cdf = len(comment_service.get_comments_by_username(username, "2020-01-01"))
+    user_comments_total = len(comment_service.get_comments_by_username(username, "2020-01-01", exclude_cdf=True))
+    cdf_total = user_comments_total_with_cdf - user_comments_total
+    user_posts_total = len(post_service.get_posts_by_username(username, "2020-01-01"))
 
     passes_activity_threshold = "✅" if user_comments_window + user_posts_window > 50 else "❌"
 
     response_body += f"### Activity in past 90 days {passes_activity_threshold}\n\n"
-    response_body += f"> Comments: {user_comments_window} ({user_comments_total} since 2021-06-01)"
-    response_body += f" Submissions: {user_posts_window} ({user_posts_total} since 2021-06-01)\n\n"
+    response_body += f"> Comments excluding CDF: {user_comments_window} ({user_comments_total} since 2020-01-01)"
+    if cdf_window or cdf_total:
+        response_body += f" (including CDF: {cdf_window}, {cdf_total} since 2020-01-01)"
+    else:
+        response_body += f" (no CDF activity)"
+    response_body += f" Submissions: {user_posts_window} ({user_posts_total} since 2020-01-01)\n\n"
     response_body += f"> Mod actions since 2021-01-01: {mod_actions_str}\n\n"
 
     redditor = reddit.redditor(username)
