@@ -11,7 +11,8 @@ if typing.TYPE_CHECKING:
     from data.base_data import BaseModel
 
 
-POST_ID_REGEX = re.compile(r"""
+POST_ID_REGEX = re.compile(
+    r"""
         (?:
             (https?://(?:\w+\.)?reddit\.com(?:/r/anime/comments))|  # Regular reddit URLs on any subdomain
             (https?://redd\.it)|                                    # Shortened URLs
@@ -19,7 +20,9 @@ POST_ID_REGEX = re.compile(r"""
         )
         /(?P<id>\w+)                                                # Post ID, the part we care about
         (?:/?\w*/?(?:\.compact)?\??)?                               # Everything afterward is irrelevant
-""", re.VERBOSE)
+""",
+    re.VERBOSE,
+)
 
 
 _b36_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"

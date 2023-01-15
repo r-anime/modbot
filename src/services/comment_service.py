@@ -33,7 +33,9 @@ def get_comments_by_post_id(post_id: Union[str, int]) -> list[CommentModel]:
     return _comment_data.get_comments_by_post_id(post_id)
 
 
-def get_comments_by_username(username: str, start_date: str = None, end_date: str = None, exclude_cdf: bool = False) -> list[CommentModel]:
+def get_comments_by_username(
+    username: str, start_date: str = None, end_date: str = None, exclude_cdf: bool = False
+) -> list[CommentModel]:
     """
     Gets all comments by a user, optionally within a specified time frame.
     """

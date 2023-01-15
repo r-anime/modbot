@@ -63,8 +63,17 @@ def main(post_list: list[str], min_percentage: float, max_time_after: timedelta)
 
 def _get_parser() -> argparse.ArgumentParser:
     new_parser = argparse.ArgumentParser(description="Check users who commented on a post.")
-    new_parser.add_argument("-f", "--file", action="store", required=True, help="File path to list of post URLs to check.")
-    new_parser.add_argument("-p", "--percentage", action="store", type=int, default=80, help="Minimum percentage of threads required (default 80).")
+    new_parser.add_argument(
+        "-f", "--file", action="store", required=True, help="File path to list of post URLs to check."
+    )
+    new_parser.add_argument(
+        "-p",
+        "--percentage",
+        action="store",
+        type=int,
+        default=80,
+        help="Minimum percentage of threads required (default 80).",
+    )
     new_parser.add_argument(
         "-d",
         "--max_days",
