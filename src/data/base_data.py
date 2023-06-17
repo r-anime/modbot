@@ -126,7 +126,6 @@ class BaseData:
         return new_model
 
     def update(self, model: BaseModel):
-
         if model.pk_field in model.modified_fields:
             raise NotImplementedError(f"Can't update the primary key of model {model}!")
 

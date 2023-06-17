@@ -9,7 +9,6 @@ logger = None
 
 
 def _setup_logging():
-
     global logger
 
     logger = logging.getLogger("modbot")

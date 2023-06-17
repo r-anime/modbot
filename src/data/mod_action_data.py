@@ -39,7 +39,6 @@ class ModActionData(BaseData):
     def get_mod_actions_targeting_post(
         self, post_id: int, actions: list[str] = None, limit: int = None, order: str = "DESC"
     ):
-
         where_clauses = ["target_post_id = :post_id"]
         sql_kwargs = {"post_id": post_id}
 
