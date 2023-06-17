@@ -9,7 +9,6 @@ colour = 22135
 
 
 def check_inbox(reddit):
-
     for message in reddit.inbox.unread(limit=5):
         if message.author != "Sub_Mentions":
             message.mark_read()
