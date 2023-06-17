@@ -75,6 +75,14 @@ def parse_mod_action(mod_action: ModAction, reddit, subreddit):
     if mod_action.action in mod_constants.MOD_ACTIONS_ALWAYS_NOTIFY:
         send_notification = True
 
+    if mod_action.action == "editsettings" and mod_action.details not in (
+        "description",
+        "del_image",
+        "upload_image",
+        "header_title",
+    ):
+        send_notification = True
+
     if mod_action.mod.name not in active_mods:
         # Add them to the database if necessary.
         mod_user = user_service.get_user(mod_action.mod.name)
