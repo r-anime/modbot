@@ -23,7 +23,6 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
     submission_stream = None
     comment_stream = None
     mod_log_stream = None
-    spam_stream = None
 
     while True:
         try:
@@ -42,9 +41,6 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
             if log:
                 logger.info("Initializing mod log stream...")
                 mod_log_stream = subreddit.mod.stream.log(skip_existing=False, pause_after=-1)
-            if spam:
-                logger.info("Initializing spam stream...")
-                spam_stream = subreddit.mod.stream.spam(skip_existing=False, pause_after=-1)
 
             while True:
                 if log:
@@ -73,7 +69,7 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
 
                 if spam:
                     logger.debug("Starting spam stream...")
-                    for item in spam_stream:
+                    for item in subreddit.mod.spam():
                         if item is None:
                             time.sleep(3)
                             break
