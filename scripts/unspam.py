@@ -5,11 +5,11 @@ Use with -h for instructions.
 """
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 
 import config_loader
 from services import post_service, comment_service
-from utils import reddit as reddit_utils
+from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
 
@@ -28,6 +28,18 @@ def approve_user_items(username, start_date, end_date):
     skip_list = []
 
     logger.info(f"Found {len(id_list)} items in database by {username}")
+    embed_json = {
+        "author": {
+            "name": f"Unspam - /u/{username}",
+        },
+        "title": f"Beginning to unspam /u/{username}",
+        "description": f"Found {len(id_list)} items in the database",
+        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "url": f"https://reddit.com/user/{username}",
+        "fields": [],
+        "color": 0x00CC00,
+    }
+    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
     for item in reddit.info(fullnames=id_list):
         try:
@@ -43,6 +55,18 @@ def approve_user_items(username, start_date, end_date):
 
     logger.info(f"Finished unspamming {username}")
     logger.info(f"Total {len(approve_list)} approved, {len(skip_list)} skipped, {len(error_list)} errors.")
+    embed_json = {
+        "author": {
+            "name": f"Unspam - /u/{username}",
+        },
+        "title": f"Finished unspamming /u/{username}",
+        "description": f"{len(approve_list)} approved, {len(skip_list)} skipped, {len(error_list)} errors",
+        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "url": f"https://reddit.com/user/{username}",
+        "fields": [],
+        "color": 0x00CC00,
+    }
+    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
 
 def _get_parser() -> argparse.ArgumentParser:
