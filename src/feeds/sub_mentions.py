@@ -1,3 +1,4 @@
+import re
 import time
 
 import config_loader
@@ -10,20 +11,30 @@ colour = 22135
 
 def check_inbox(reddit):
     for message in reddit.inbox.unread(limit=5):
-        if message.author != "Sub_Mentions":
+        logger.info(f"Checking message from {message.author}")
+        if message.author != "Sub_Mentions" and not message.author.name.startswith("feedcomber-"):
             message.mark_read()
             continue
 
-        author, desc = message.body.split("\n\n", 1)
+        message_body = re.sub("\n\n___\n\n", "\n\n____\n\n", message.body)  # standardize template
+        header, body = message_body.split("\n\n____\n\n", 1)
+        body, footer = body.rsplit("\n\n____\n\n", 1)
+        header_parts = header.split("\n\n")
+        link = header_parts[-1]
+        author = header_parts[-2]
 
-        title = message.subject.replace("[Notification] Your subreddit has been mentioned in ", "")
-        title = title.replace("!", " - ")
+        # Check to see that it's actually a reference to /r/anime and not something else.
+        if not re.search(r"\br/anime\b", body):
+            message.mark_read()
+            continue
+
+        title = re.sub(r"^.*/(r/\w+)!?$", r"/\1 - ", message.subject)
         title += author.replace("Author: ", "")
         logger.info(f"Processing message {title}")
 
-        desc = desc[:-279]  # removes info at the end of the message
-        desc = desc.replace("(/r/", "(https://www.reddit.com/r/")  # hyperlinks reddit links
-        desc = desc.replace("\n___\n", "")
+        desc = link.replace("(/r/", "(https://www.reddit.com/r/")  # hyperlink to reference
+        desc += "\n\n" + body
+
         if len(desc) >= 2000:  # message length (max for webhook is 2000)
             desc = desc[:1997] + "..."
 
