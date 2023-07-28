@@ -24,7 +24,8 @@ def check_inbox(reddit):
         author = header_parts[-2]
 
         # Check to see that it's actually a reference to /r/anime and not something else.
-        if not re.search(r"\br/anime\b", body):
+        # Negative lookahead is to catch weird formatting from redesign handling underscores, e.g. r/anime\_irl
+        if not re.search(r"\br/anime\b(?!\\?_)", body):
             message.mark_read()
             continue
 
