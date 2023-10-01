@@ -33,7 +33,7 @@ def _format_line(submission, position, rank_change, total_hours):
 
     line += " {:>24}".format(f"[{submission.link_flair_text}]({submission.id})")
 
-    line += f" <{submission.author.name}>"
+    line += f" <{submission.author.name}>" if submission.author is not None else " <[deleted]>"
 
     line += f" <{reddit_utils.slug(submission)}>"
 
