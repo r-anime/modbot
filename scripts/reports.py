@@ -104,9 +104,9 @@ def _report_monthly(report_args: argparse.Namespace):
         details="permanent",
         exclude_mod_accounts_list=mod_constants.ADMINS,
     )
-    banned_users_bots = mod_action_service.count_mod_actions(
-        "banuser", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
-    )
+    # banned_users_bots = mod_action_service.count_mod_actions(
+    #     "banuser", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
+    # )
     unbanned_users = mod_action_service.count_mod_actions(
         "unbanuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
     )
@@ -142,7 +142,7 @@ def _report_monthly(report_args: argparse.Namespace):
 
     meta_message = f"""Monthly Report – {start_date.strftime("%B %Y")}:
 ```
-- Total traffic: {total_views} pageviews, {unique_views} unique pageviews
+- Total traffic: {total_views} pageviews, {unique_views} unique visitors
 - Total posts: {total_posts}, {total_post_authors} unique authors
 - Total comments: {total_comments}, {total_comment_authors} unique authors (excluding mod bots)
 - Removed posts: {removed_posts_humans} by moderators, {removed_posts_bots} by bots, {removed_posts_total} distinct
@@ -150,7 +150,7 @@ def _report_monthly(report_args: argparse.Namespace):
 - Approved posts: {approved_posts}
 - Approved comments: {approved_comments}
 - Distinguished comments: {distinguished_comments}
-- Users banned: {banned_users} ({permabanned_users} permanent, {banned_users_bots} by BotDefense)
+- Users banned: {banned_users} ({permabanned_users} permanent)
 - Users unbanned: {actual_unbanned}
 - Admin/Anti-Evil Operations: removed posts: {admin_removed_posts}, removed comments: {admin_removed_comments}.```"""  # noqa: E501
 
