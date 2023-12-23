@@ -1,6 +1,7 @@
 """Utilities regarding Reddit posts/users/etc"""
 
 import copy
+import re
 import typing
 
 import mintotp
@@ -8,6 +9,20 @@ import praw
 
 if typing.TYPE_CHECKING:
     from data.base_data import BaseModel
+
+
+POST_ID_REGEX = re.compile(
+    r"""
+        (?:
+            (https?://(?:\w+\.)?reddit\.com(?:/r/anime/comments))|  # Regular reddit URLs on any subdomain
+            (https?://redd\.it)|                                    # Shortened URLs
+            /comments                                               # Relative links
+        )
+        /(?P<id>\w+)                                                # Post ID, the part we care about
+        (?:/?\w*/?(?:\.compact)?\??)?                               # Everything afterward is irrelevant
+""",
+    re.VERBOSE,
+)
 
 
 _b36_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"

@@ -31,7 +31,7 @@ def _format_line(submission, position, rank_change, total_hours):
 
     line += f" {submission.score:>5}"
 
-    line += " {:>24}".format(f"[{submission.link_flair_text}]({submission.id})")
+    line += " {:>25}".format(f"[{submission.link_flair_text}]({submission.id})")
 
     line += f" <{submission.author.name}>" if submission.author is not None else " <[deleted]>"
 

@@ -134,6 +134,10 @@ def format_post_embed(post: PostModel):
     if post.metadata and post.metadata.get("spoiler"):
         embed_json["fields"].append({"name": "Spoiler", "value": "\u200b", "inline": True})
 
+    if post.deleted_time:
+        deleted_timestamp = int(post.deleted_time.timestamp())
+        embed_json["fields"].append({"name": "Deleted", "value": f"<t:{deleted_timestamp}:t>", "inline": True})
+
     return embed_json
 
 

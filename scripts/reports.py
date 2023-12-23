@@ -94,10 +94,15 @@ def _report_monthly(report_args: argparse.Namespace):
     )
 
     banned_users = mod_action_service.count_mod_actions(
-        "banuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=_bots_and_admins
+        "banuser", start_date, end_date, distinct=True, exclude_mod_accounts_list=mod_constants.ADMINS
     )
     permabanned_users = mod_action_service.count_mod_actions(
-        "banuser", start_date, end_date, distinct=True, details="permanent", exclude_mod_accounts_list=_bots_and_admins
+        "banuser",
+        start_date,
+        end_date,
+        distinct=True,
+        details="permanent",
+        exclude_mod_accounts_list=mod_constants.ADMINS,
     )
     # banned_users_bots = mod_action_service.count_mod_actions(
     #     "banuser", start_date, end_date, distinct=True, mod_accounts_list=mod_constants.BOTS
