@@ -57,7 +57,7 @@ def base36decode(number):
     return int(number, 36)
 
 
-def make_permalink(model: "BaseModel") -> str:
+def make_permalink(model: "BaseModel", shortlink=False) -> str:
     # Avoiding circular imports.
     from data.comment_data import CommentModel
     from data.post_data import PostModel
@@ -69,10 +69,30 @@ def make_permalink(model: "BaseModel") -> str:
         return base_url + f"comments/{base36encode(model.post_id)}/-/{model.id36}"
 
     if isinstance(model, PostModel):
+        if shortlink:
+            return f"https://redd.it/{model.id36}"
         return base_url + f"comments/{model.id36}"
 
     if isinstance(model, UserModel):
         return base_url + f"/user/{model.username}"
+
+    raise TypeError(f"Unknown model {model.__class__}")
+
+
+def make_relative_link(model: "BaseModel") -> str:
+    # Avoiding circular imports.
+    from data.comment_data import CommentModel
+    from data.post_data import PostModel
+    from data.user_data import UserModel
+
+    if isinstance(model, CommentModel):
+        return f"/comments/{base36encode(model.post_id)}/-/{model.id36}"
+
+    if isinstance(model, PostModel):
+        return f"/comments/{model.id36}"
+
+    if isinstance(model, UserModel):
+        return f"/u/{model.username}"
 
     raise TypeError(f"Unknown model {model.__class__}")
 

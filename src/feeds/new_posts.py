@@ -7,6 +7,7 @@ import time
 from praw.models.reddit.submission import Submission
 
 import config_loader
+from constants import post_constants
 from services import post_service, base_data_service
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
@@ -44,6 +45,16 @@ def process_post(submission: Submission):
         post.discord_message_id = discord_message_id
 
     base_data_service.update(post)
+
+    # If this is a new daily thread, do all the updating for it.
+    if (
+        author_name == post_constants.DAILY_THREAD_AUTHOR
+        and post_constants.DAILY_THREAD_NAME.lower() in post.title.lower()
+    ):
+        try:
+            post_service.rotate_daily_thread(post)
+        except Exception:
+            logger.exception("Unable to process new daily thread")
 
     logger.debug(f"Finished processing {post.id36}")
 
