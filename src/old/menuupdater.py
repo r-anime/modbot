@@ -1,11 +1,7 @@
 from datetime import datetime, timezone, timedelta
-import re
 import time
 
-import praw
-
 import config_loader
-from constants import post_constants
 from services import post_service, sidebar_service
 from utils import reddit
 from utils.logger import logger
