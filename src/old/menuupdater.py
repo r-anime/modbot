@@ -5,13 +5,13 @@ import time
 import praw
 
 import config_loader
+from constants import post_constants
+from services import post_service, sidebar_service
 from utils import reddit
 from utils.logger import logger
 
 
 SEARCH_TIMEOUT = 3600
-LINK_REGEX = r"\[{name}\]\(.*?\)"
-LINK_FORMAT = "[{name}]({link})"
 
 
 class SubredditMenuUpdater:
@@ -39,8 +39,12 @@ class SubredditMenuUpdater:
         self.subreddit = self.reddit.subreddit(config_loader.REDDIT["subreddit"])
 
         post = self._find_post(name, author)
-        self._update_menus(name, post)
-        self._update_redesign_menus(name, short_name, post)
+        db_post = post_service.get_post_by_id(post.id)
+        sidebar_service.replace_sidebar_link(name, reddit.make_relative_link(db_post), self.subreddit)
+        sidebar_service.update_redesign_menus(name, short_name, db_post, self.subreddit)
+
+        # self._update_menus(name, post)
+        # self._update_redesign_menus(name, short_name, post)
         logger.info(f"Completed running subreddit menu updater for {name}")
 
     def _find_post(self, name, author):
@@ -73,8 +77,8 @@ class SubredditMenuUpdater:
         """
         logger.debug("Updating menus on old Reddit")
 
-        pattern_match = LINK_REGEX.format(name=name)
-        pattern_replace = LINK_FORMAT.format(name=name, link=post.shortlink)
+        pattern_match = post_constants.LINK_REGEX.format(name=name)
+        pattern_replace = post_constants.LINK_FORMAT.format(name=name, link=post.shortlink)
 
         sidebar = self.subreddit.wiki["config/sidebar"]
         sidebar_text = sidebar.content_md
@@ -111,8 +115,8 @@ class SubredditMenuUpdater:
             topmenu.mod.update(data=list(topmenu))
             logger.debug("Topbar menu updated")
 
-        pattern_match = LINK_REGEX.format(name=name)
-        pattern_replace = LINK_FORMAT.format(name=name, link=post.shortlink)
+        pattern_match = post_constants.LINK_REGEX.format(name=name)
+        pattern_replace = post_constants.LINK_FORMAT.format(name=name, link=post.shortlink)
 
         sidemenu = self._get_redesign_sidemenu(name)
         sidemenu_text = sidemenu.text
@@ -164,7 +168,7 @@ class SubredditMenuUpdater:
         """
         sidebar = self.subreddit.widgets.sidebar
 
-        pattern_match = LINK_REGEX.format(name=name)
+        pattern_match = post_constants.LINK_REGEX.format(name=name)
 
         for widget in sidebar:
             if isinstance(widget, praw.models.TextArea):
