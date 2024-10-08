@@ -98,11 +98,11 @@ def check_fanart_frequency(post):
             break
         if is_fanart(submission):
             count += 1
-        if count > 2:
+        if count > 1:
             remove(
                 post,
                 f"Recent fanart (id: {submission.id})",
-                message="You may only submit two fanart posts in a 7-day period.",
+                message="You may only submit one fanart post in a 7-day period.",
             )
             break
 
