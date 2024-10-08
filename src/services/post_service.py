@@ -1,14 +1,10 @@
-import re
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, datetime, timezone
 from typing import Union, Optional
 
-import prawcore
 from praw.models.reddit.submission import Submission
 
-import config_loader
-from constants import post_constants
 from data.post_data import PostData, PostModel
-from services import user_service, sidebar_service
+from services import user_service
 from utils import reddit, discord
 from utils.logger import logger
 
@@ -158,90 +154,6 @@ def load_post_flairs(subreddit):
         _flair_colors[flair["id"]] = int(color_hex, base=16)
     logger.info(f"Loaded post flairs from {subreddit.display_name_prefixed}")
     logger.debug(f"Flairs loaded: {_flair_colors}")
-
-
-def rotate_daily_thread(new_post):
-    """Update links for the new daily thread and add a sticky comment in the old one."""
-
-    reddit_instance = reddit.get_reddit_instance(config_loader.REDDIT["auth"])
-    subreddit = reddit_instance.subreddit(config_loader.REDDIT["subreddit"])
-
-    # Find previous daily thread post
-    last_week = datetime.now(tz=timezone.utc) - timedelta(days=8)
-    post_list = _post_data.get_posts_by_username(post_constants.DAILY_THREAD_AUTHOR, last_week.isoformat())
-    # Filter out the new posts, removed posts, and posts with other flairs.
-    post_list = filter(lambda p: p.flair_text == "Daily" and p.id36 != new_post.id36 and not p.removed, post_list)
-    post_list = sorted(post_list, key=lambda p: p.created_time, reverse=True)  # sort with most recent first
-
-    if not post_list:
-        old_post = None
-        logger.warning("Unable to find previous daily thread")
-    else:
-        old_post = post_list[0]
-
-    # Update sidebar/menu items
-    sidebar_service.replace_sidebar_link(
-        post_constants.DAILY_THREAD_NAME, reddit.make_relative_link(new_post), subreddit
-    )
-    sidebar_service.update_redesign_menus(
-        post_constants.DAILY_THREAD_NAME, post_constants.DAILY_THREAD_SHORT_NAME, new_post, subreddit
-    )
-
-    # Update new thread body
-    original_text = new_post.body
-    # Change redd.it/<id> links to relative /comments/<id>
-    updated_text = re.sub(r"https?://(?:www\.)?redd\.it/(\w+)/?", r"/comments/\g<1>", original_text)
-    # Include link to previous thread, using the thread pulled from database rather than existing link in the post
-    if old_post:
-        updated_text = re.sub(
-            r"\[« Previous Thread]\(.*?\)", f"[« Previous Thread](/comments/{old_post.id36})", updated_text
-        )
-    # Keep redesign/mobile image embed after edit
-    updated_text = re.sub(r"\[(.*?)]\(https://preview\.redd\.it/(\w+)\..*?\)", r'![img](\g<2> "\g<1>")', updated_text)
-    new_thread = reddit_instance.submission(id=new_post.id36)
-    new_thread.edit(body=updated_text)
-
-    # Sort by new (since it's broken on reddit's end at times)
-    new_thread.mod.suggested_sort(sort="new")
-
-    # Add sticky comment for the new thread (if it exists)
-    sticky_comment_wiki = subreddit.wiki["daily_thread/sticky_comment"]
-    try:
-        sticky_comment_text = sticky_comment_wiki.content_md.strip()
-    except prawcore.exceptions.NotFound:
-        sticky_comment_text = ""
-
-    if sticky_comment_text:
-        new_sticky_comment = new_thread.reply(sticky_comment_text)
-        new_sticky_comment.disable_inbox_replies()
-        new_sticky_comment.mod.distinguish(sticky=True)
-        logger.debug("Posted sticky comment to new thread")
-    else:
-        logger.debug("No sticky comment for new thread")
-
-    # Update old thread
-    if old_post:
-        original_text = old_post.body
-        updated_text = re.sub(r"\[Next Thread »]\(.*?\)", f"[Next Thread »](/comments/{new_post.id36})", original_text)
-        # Keep redesign/mobile image embed after edit, e.g. ![img](vu9tn0wcvwka1 "This is the place!")
-        updated_text = re.sub(
-            r"\[(.*?)]\(https://preview\.redd\.it/(\w+)\..*?\)", r'![img](\g<2> "\g<1>")', updated_text
-        )
-        old_thread = reddit_instance.submission(id=old_post.id36)
-        old_thread.edit(body=updated_text)
-
-        # Notify old daily that the new daily is up
-        notify_comment = old_thread.reply(
-            f"""
-Hello /r/anime, a new daily thread has been posted! Please follow
-[this link](/comments/{new_post.id36}) to move on to the new thread
-or [search for the latest thread](/r/{subreddit}/search?q=flair%3ADaily&restrict_sr=on&sort=new).
-
-[](#heartbot "And don't forget to be nice to new users!")
-        """
-        )
-        notify_comment.disable_inbox_replies()
-        notify_comment.mod.distinguish(sticky=True)
 
 
 def _create_post_model(reddit_post: Submission) -> PostModel:
