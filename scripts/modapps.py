@@ -4,7 +4,6 @@ Mod Apps Parser/Poster
 One caveat is that the username field must be sanitized (i.e. ensured valid) in the CSV prior to running this script.
 """
 
-
 import argparse
 import csv
 from datetime import datetime, timedelta
