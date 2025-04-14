@@ -110,7 +110,9 @@ def check_fanart_frequency(post):
 
 
 def is_fanart(post):
-    return post.subreddit.display_name == config_loader.REDDIT["subreddit"] and (post.link_flair_text == "Fanart" or post.link_flair_text == "Cosplay")
+    return post.subreddit.display_name == config_loader.REDDIT["subreddit"] and (
+        post.link_flair_text == "Fanart" or post.link_flair_text == "Cosplay"
+    )
 
 
 #####################################
