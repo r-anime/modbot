@@ -42,7 +42,7 @@ def main(subreddit):
                 # Note : only the first violation will be reported
                 # Check fanart frequency
                 if is_fanart(post):
-                    logger.debug(f"Found fanart {post} by {post.author.name}")
+                    logger.debug(f"Found fanart/cosplay {post} by {post.author.name}")
                     check_fanart_frequency(post)
                 # Check clip frequency
                 if is_clip(post):
@@ -102,15 +102,17 @@ def check_fanart_frequency(post):
             remove(
                 post,
                 f"Recent fanart (id: {submission.id})",
-                message="You may only submit one fanart post in a 7-day period.",
+                message="You may only submit one fanart/cosplay post in a 7-day period.",
             )
             break
 
-    logger.debug(f"Finished checking history of {post.author.name} for fanart frequency")
+    logger.debug(f"Finished checking history of {post.author.name} for fanart/cosplay frequency")
 
 
 def is_fanart(post):
-    return post.subreddit.display_name == config_loader.REDDIT["subreddit"] and post.link_flair_text == "Fanart"
+    return post.subreddit.display_name == config_loader.REDDIT["subreddit"] and (
+        post.link_flair_text == "Fanart" or post.link_flair_text == "Cosplay"
+    )
 
 
 #####################################
