@@ -31,6 +31,29 @@ def get_posts_by_username(username: str, start_date: str = None, end_date: str =
     return _post_data.get_posts_by_username(username, start_date, end_date)
 
 
+def get_flaired_posts_by_username(
+    username: str,
+    flairs: list[str],
+    exclude_reddit_ids: list[str] = None,
+    include_removed: bool = False,
+    start_date: str = None,
+    end_date: str = None,
+) -> list[PostModel]:
+    """
+    Gets all posts of the given flairs by a user,
+    optionally within a specified time frame, excluding certain posts, or including removed posts.
+    """
+
+    return _post_data.get_flaired_posts_by_username(
+        username,
+        flairs,
+        exclude_reddit_ids=exclude_reddit_ids,
+        include_removed=include_removed,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
 def count_posts(start_date: date = None, end_date: date = None, exclude_authors: list = None) -> int:
     """
     Gets number of posts made in the given date range.
