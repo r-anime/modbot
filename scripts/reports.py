@@ -142,17 +142,17 @@ def _report_monthly(report_args: argparse.Namespace):
 
     meta_message = f"""Monthly Report – {start_date.strftime("%B %Y")}:
 ```
-- Total traffic: {total_views} pageviews, {unique_views} unique visitors
-- Total posts: {total_posts}, {total_post_authors} unique authors
-- Total comments: {total_comments}, {total_comment_authors} unique authors (excluding mod bots)
-- Removed posts: {removed_posts_humans} by moderators, {removed_posts_bots} by bots, {removed_posts_total} distinct
-- Removed comments: {removed_comments_humans} by moderators, {removed_comments_bots} by bots, {removed_comments_total} distinct
-- Approved posts: {approved_posts}
-- Approved comments: {approved_comments}
-- Distinguished comments: {distinguished_comments}
-- Users banned: {banned_users} ({permabanned_users} permanent)
-- Users unbanned: {actual_unbanned}
-- Admin/Anti-Evil Operations: removed posts: {admin_removed_posts}, removed comments: {admin_removed_comments}.```"""  # noqa: E501
+- Total traffic: {total_views:,} pageviews, {unique_views:,} unique visitors
+- Total posts: {total_posts:,}, {total_post_authors:,} unique authors
+- Total comments: {total_comments:,}, {total_comment_authors:,} unique authors (excluding mod bots)
+- Removed posts: {removed_posts_humans:,} by moderators, {removed_posts_bots:,} by bots, {removed_posts_total:,} distinct
+- Removed comments: {removed_comments_humans:,} by moderators, {removed_comments_bots:,} by bots, {removed_comments_total:,} distinct
+- Approved posts: {approved_posts:,}
+- Approved comments: {approved_comments:,}
+- Distinguished comments: {distinguished_comments:,}
+- Users banned: {banned_users:,} ({permabanned_users:,} permanent)
+- Users unbanned: {actual_unbanned:,}
+- Admin/Anti-Evil Operations: removed posts: {admin_removed_posts:,}, removed comments: {admin_removed_comments:,}.```"""  # noqa: E501
 
     discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"content": meta_message})
 
