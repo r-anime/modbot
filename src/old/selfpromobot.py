@@ -49,7 +49,7 @@ CLIP_CONFIG = FlairConfig(
     period=timedelta(days=29, hours=23, minutes=45),
     allowed_count=2,
     reporting_flair_name="Clip",
-    reporting_period="every 30 days",
+    reporting_period="in a 30 day period",
 )
 VIDEO_EDIT_CONFIG = FlairConfig(
     db_flairs=["Video Edit"],
