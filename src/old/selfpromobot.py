@@ -70,8 +70,6 @@ FLAIR_CONFIGS = [FANART_CONFIG, CLIP_CONFIG, VIDEO_EDIT_CONFIG, VIDEO_CONFIG]
 
 # Number of posts to check on each run
 posts_per_run = 25
-# Maximum number of items to check in a user's history
-history = 500
 # Interval between multiple checks
 interval = 60
 
