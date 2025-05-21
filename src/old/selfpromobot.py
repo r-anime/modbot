@@ -35,7 +35,7 @@ REMOVAL_MESSAGE_SUB_TEMPLATE = """
 You may only submit {allowed_count} {reporting_flair_name} post{plural} {reporting_period}.\n
 Your previous {reporting_flair_name} post{plural} on r/{sub_name}:\n
 {previous_posts}\n
-You may make another {reporting_flair_name} in approximately {duration_left} from now.""".strip
+You may make another {reporting_flair_name} in approximately {duration_left} from now.""".strip()
 
 FANART_CONFIG = FlairConfig(
     db_flairs=["Fanart", "Cosplay"],
