@@ -79,6 +79,47 @@ class PostData(BaseData):
         result_rows = self.execute(sql, **sql_kwargs)
         return [PostModel(row) for row in result_rows]
 
+    def get_flaired_posts_by_username(
+        self,
+        username: str,
+        flairs: list[str],
+        exclude_reddit_ids: list[str] = None,
+        include_removed: bool = False,
+        start_date: str = None,
+        end_date: str = None,
+    ) -> list[PostModel]:
+        where_clauses = ["lower(author) = :username", "lower(flair_text) IN :flairs"]
+        sql_kwargs = {"username": username.lower(), "flairs": tuple([f.lower() for f in flairs])}
+
+        if exclude_reddit_ids:
+            where_clauses.append("id36 NOT IN :excluded_ids")
+            sql_kwargs["excluded_ids"] = tuple(exclude_reddit_ids)
+
+        if not include_removed:
+            where_clauses.append("removed != :removed")
+            sql_kwargs["removed"] = str(not include_removed)
+
+        if start_date:
+            where_clauses.append("created_time >= :start_date")
+            sql_kwargs["start_date"] = start_date
+
+        if end_date:
+            where_clauses.append("created_time < :end_date")
+            sql_kwargs["end_date"] = end_date
+
+        where_str = " AND ".join(where_clauses)
+
+        sql = text(
+            f"""
+        SELECT * FROM posts
+        WHERE {where_str}
+        ORDER BY created_time ASC;
+        """
+        )
+
+        result_rows = self.execute(sql, **sql_kwargs)
+        return [PostModel(row) for row in result_rows]
+
     def get_post_count(self, start_date: str = None, end_date: str = None, exclude_authors: list = None) -> int:
         where_clauses = []
         sql_kwargs = {}
