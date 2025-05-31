@@ -30,7 +30,7 @@ REMOVAL_MESSAGE_TEMPLATE = """Sorry, your submission has been removed.\n\n{messa
 [contact the moderators of this subreddit](https://www.reddit.com/message/compose/?to=/r/anime)
 if you have any questions or concerns.*"""
 
-REMOVAL_REASON_TEMPLATE = "Too many {reporting_flair_name} submitted: {posts}"
+REMOVAL_REASON_TEMPLATE = "Too many {reporting_flair_name} submitted"
 REMOVAL_MESSAGE_SUB_TEMPLATE = """
 You may only submit {allowed_count} {reporting_flair_name} post{plural} {reporting_period}.\n
 Your previous {reporting_flair_name} post{plural} on r/{sub_name}:\n
@@ -161,10 +161,7 @@ def check_frequency(flair_config: FlairConfig, post: Submission):
 
 
 def pretty_removal_reason(flair_config: FlairConfig, db_posts: list[PostModel]) -> str:
-    mods_recent_posts = ", ".join([f'{{id: "{item.id36}", posted: "{str(item.created_time)}"}}' for item in db_posts])
-    return REMOVAL_REASON_TEMPLATE.format(
-        reporting_flair_name=flair_config.reporting_flair_name, posts=mods_recent_posts
-    )
+    return REMOVAL_REASON_TEMPLATE.format(reporting_flair_name=flair_config.reporting_flair_name)
 
 
 def pretty_removal_message(flair_config: FlairConfig, db_posts: list[PostModel]) -> str:
