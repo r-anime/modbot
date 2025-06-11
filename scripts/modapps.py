@@ -60,7 +60,7 @@ def process_row(row, activity_start_date, activity_end_date):
         if mod_action.action not in mod_actions:
             mod_actions[mod_action.action] = []
         mod_actions[mod_action.action].append(mod_action)
-    mod_actions_str = ", ".join(f"{action} ({len(action_list)})" for action, action_list in mod_actions.items())
+    mod_actions_str = ", ".join(f"{action} ({len(action_list):,})" for action, action_list in mod_actions.items())
 
     user_comments_total_with_cdf = len(comment_service.get_comments_by_username(username, "2020-01-01"))
     user_comments_total = len(comment_service.get_comments_by_username(username, "2020-01-01", exclude_cdf=True))
@@ -70,12 +70,12 @@ def process_row(row, activity_start_date, activity_end_date):
     passes_activity_threshold = "✅" if user_comments_window + user_posts_window > 50 else "❌"
 
     response_body += f"### Activity in past 90 days {passes_activity_threshold}\n\n"
-    response_body += f"> Comments excluding CDF: {user_comments_window} ({user_comments_total} since 2020-01-01)"
+    response_body += f"> Comments excluding CDF: {user_comments_window:,} ({user_comments_total:,} since 2020-01-01)"
     if cdf_window or cdf_total:
-        response_body += f" (including CDF: {cdf_window}, {cdf_total} since 2020-01-01)"
+        response_body += f" (including CDF: {cdf_window:,}, {cdf_total:,} since 2020-01-01)"
     else:
         response_body += " (no CDF activity)"
-    response_body += f" Submissions: {user_posts_window} ({user_posts_total} since 2020-01-01)\n\n"
+    response_body += f" Submissions: {user_posts_window:,} ({user_posts_total:,} since 2020-01-01)\n\n"
     response_body += f"> Mod actions since 2021-01-01: {mod_actions_str}\n\n"
 
     redditor = reddit.redditor(username)
@@ -83,7 +83,7 @@ def process_row(row, activity_start_date, activity_end_date):
     response_body += "### Other Subreddits Moderated (Subscribers)\n\n> "
     if other_subs:
         for sub in other_subs:
-            response_body += f"/r/{sub.display_name} ({sub.subscribers}) // "
+            response_body += f"/r/{sub.display_name} ({sub.subscribers:,}) // "
         response_body += "\n\n"
     else:
         response_body += "(none)\n\n"
