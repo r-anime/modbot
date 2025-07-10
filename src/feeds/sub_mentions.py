@@ -26,7 +26,7 @@ def check_inbox(reddit):
         header_parts = header.split("\n\n")
         subject = header_parts[0]
         if message.subject != "[direct chat room]":
-            subject = message.subject
+            subject = message.subject # old DM format
         link = header_parts[-1]
         author = header_parts[-2]
 
