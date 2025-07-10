@@ -24,6 +24,9 @@ def check_inbox(reddit):
             body = "\n\n" + body
         body, footer = body.rsplit("\n\n---\n\n", 1)
         header_parts = header.split("\n\n")
+        subject = header_parts[0]
+        if message.subject != "[direct chat room]":
+            subject = message.subject
         link = header_parts[-1]
         author = header_parts[-2]
 
@@ -34,7 +37,7 @@ def check_inbox(reddit):
             message.mark_read()
             continue
 
-        title = re.sub(r"^.*/(r/\w+)!?$", r"/\1 - ", message.subject)
+        title = re.sub(r"^.*/(r/\w+)!?$", r"/\1 - ", subject)
         title += author.replace("Author: ", "")
         logger.info(f"Processing message {title}")
 
