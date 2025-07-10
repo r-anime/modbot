@@ -17,10 +17,10 @@ def check_inbox(reddit):
             continue
 
         message_body = message.body
-        message_body = re.sub("\n\n---\n\n", "\n\n____\n\n", message_body)  # standardize template
-        message_body = re.sub("\n\n___\n\n", "\n\n____\n\n", message_body)  # standardize template
-        header, body = message_body.split("\n\n____\n\n", 1)
-        body, footer = body.rsplit("\n\n____\n\n", 1)
+        message_body = re.sub("\n\n___\n\n", "\n\n---\n\n", message_body, count=2)  # standardize template
+        message_body = re.sub("\n\n____\n\n", "\n\n---\n\n", message_body, count=2)  # standardize template
+        header, body = message_body.split("\n\n---\n\n", 1)
+        body, footer = body.rsplit("\n\n---\n\n", 1)
         header_parts = header.split("\n\n")
         link = header_parts[-1]
         author = header_parts[-2]
