@@ -10,7 +10,7 @@ colour = 22135
 
 
 def check_inbox(reddit):
-    for message in reddit.inbox.unread(limit=5):
+    for message in reversed(list(reddit.inbox.unread(limit=5))):
         logger.info(f"Checking message from {message.author}")
         if message.author != "Sub_Mentions" and not message.author.name.startswith("feedcomber-"):
             message.mark_read()
