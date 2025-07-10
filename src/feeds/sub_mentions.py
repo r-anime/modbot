@@ -10,16 +10,23 @@ colour = 22135
 
 
 def check_inbox(reddit):
-    for message in reddit.inbox.unread(limit=5):
+    for message in reversed(list(reddit.inbox.unread(limit=5))):
         logger.info(f"Checking message from {message.author}")
         if message.author != "Sub_Mentions" and not message.author.name.startswith("feedcomber-"):
             message.mark_read()
             continue
 
-        message_body = re.sub("\n\n___\n\n", "\n\n____\n\n", message.body)  # standardize template
-        header, body = message_body.split("\n\n____\n\n", 1)
-        body, footer = body.rsplit("\n\n____\n\n", 1)
+        message_body = message.body
+        message_body = re.sub("\n\n___\n\n", "\n\n---\n\n", message_body, count=2)  # standardize template
+        message_body = re.sub("\n\n____\n\n", "\n\n---\n\n", message_body, count=2)  # standardize template
+        header, body = message_body.split("\n\n---\n\n", 1)
+        if body.startswith("---"):
+            body = "\n\n" + body
+        body, footer = body.rsplit("\n\n---\n\n", 1)
         header_parts = header.split("\n\n")
+        subject = header_parts[0]
+        if message.subject != "[direct chat room]":
+            subject = message.subject  # old DM format
         link = header_parts[-1]
         author = header_parts[-2]
 
@@ -30,7 +37,7 @@ def check_inbox(reddit):
             message.mark_read()
             continue
 
-        title = re.sub(r"^.*/(r/\w+)!?$", r"/\1 - ", message.subject)
+        title = re.sub(r"^.*/(r/\w+)!?$", r"/\1 - ", subject)
         title += author.replace("Author: ", "")
         logger.info(f"Processing message {title}")
 
