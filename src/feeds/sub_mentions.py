@@ -16,7 +16,9 @@ def check_inbox(reddit):
             message.mark_read()
             continue
 
-        message_body = re.sub("\n\n___\n\n", "\n\n____\n\n", message.body)  # standardize template
+        message_body = message.body
+        message_body = re.sub("\n\n---\n\n", "\n\n____\n\n", message_body)  # standardize template
+        message_body = re.sub("\n\n___\n\n", "\n\n____\n\n", message_body)  # standardize template
         header, body = message_body.split("\n\n____\n\n", 1)
         body, footer = body.rsplit("\n\n____\n\n", 1)
         header_parts = header.split("\n\n")
