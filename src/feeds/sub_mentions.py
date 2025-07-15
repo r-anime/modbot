@@ -65,6 +65,7 @@ if __name__ == "__main__":
             logger.info("Connecting to Reddit...")
             # Requires an account linked to /u/Sub_Mentions
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
+            logger.info("Connected to Reddit")
             while True:
                 check_inbox(reddit)
                 logger.debug("waiting...")
