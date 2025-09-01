@@ -43,7 +43,7 @@ def voting_thread_title(app_announcement_datetime):
 
 
 def voting_thread_post_body(numb_total_apps, numb_troll_apps):
-    return """**This is the only round of voting.**
+    body_text = """**This is the only round of voting.**
 
 Extensive debates and trash talking can go in the proper Discord channel, which will be expunged before bringing new mods on board.
 
@@ -51,9 +51,8 @@ Vote [yes](#yes) or [no](#no) on each application. As usual there's no well-esta
 
 If there are any troll applications, you must mark them using a `Troll` column in the form responses (it just needs to non empty). Note that you will need to be on the AnimeMod account to edit it.
 
-There are **{numb_total_apps}** legitimate applications so far and an additional **{numb_troll_apps}** troll applications not included.""".format(
-        numb_total_apps=numb_total_apps, numb_troll_apps=numb_troll_apps
-    )  # noqa: E501
+There are **{numb_total_apps}** legitimate applications so far and an additional **{numb_troll_apps}** troll applications not included."""  # noqa: E501
+    return body_text.format(numb_total_apps=numb_total_apps, numb_troll_apps=numb_troll_apps)
 
 
 def find_voting_thread(voting_subreddit, title):
