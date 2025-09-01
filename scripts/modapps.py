@@ -80,6 +80,7 @@ def process_csv(csv_file, voting_thread, app_comments, app_announcement_datetime
             app_comments[username] = []
         upsert_comment_chain(voting_thread, app_comments[username], comment_list)
 
+    # Delete any comments we made that we didn't recalculate (shortened comments or newly troll comments)
     for comment_list in app_comments.values():
         for entry in comment_list:
             if not entry["processed"]:
