@@ -22,9 +22,10 @@ username_key = "What is your Reddit username?"
 
 reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
 
+
 def upsert_voting_thread(voting_subreddit, app_announcement_datetime, numb_total_apps=-1, numb_troll_apps=-1):
     title = voting_thread_title(app_announcement_datetime)
-    body = voting_thread_post_body(numb_total_apps,numb_troll_apps)
+    body = voting_thread_post_body(numb_total_apps, numb_troll_apps)
 
     voting_thread = find_voting_thread(voting_subreddit, title)
     if voting_thread:
@@ -36,8 +37,10 @@ def upsert_voting_thread(voting_subreddit, app_announcement_datetime, numb_total
 
     return voting_thread
 
+
 def voting_thread_title(app_announcement_datetime):
     return f"Mod Applications — {app_announcement_datetime.strftime("%B %Y")}"
+
 
 def voting_thread_post_body(numb_total_apps, numb_troll_apps):
     return """**This is the only round of voting.**
@@ -48,7 +51,10 @@ Vote [yes](#yes) or [no](#no) on each application. As usual there's no well-esta
 
 If there are any troll applications, you must mark them using a `Troll` column in the form responses (it just needs to non empty). Note that you will need to be on the AnimeMod account to edit it.
 
-There are **{numb_total_apps}** legitimate applications so far and an additional **{numb_troll_apps}** troll applications not included.""".format(numb_total_apps=numb_total_apps, numb_troll_apps=numb_troll_apps)
+There are **{numb_total_apps}** legitimate applications so far and an additional **{numb_troll_apps}** troll applications not included.""".format(
+        numb_total_apps=numb_total_apps, numb_troll_apps=numb_troll_apps
+    )
+
 
 def find_voting_thread(voting_subreddit, title):
     username = config_loader.REDDIT["auth"]["username"]
@@ -80,6 +86,7 @@ def process_csv(csv_file, voting_thread, app_comments, app_announcement_datetime
                 entry["reddit_comment"].delete()
     return legit_apps, troll_apps
 
+
 def find_comment_list(comment, bot_username):
     username = re.search("> https://www.reddit.com/user/(.*?)\n\n", comment.body).group(1)
     comment_list = []
@@ -90,11 +97,13 @@ def find_comment_list(comment, bot_username):
 
     return username, comment_list
 
+
 def find_bot_reply(comment, bot_username):
     for comment in comment.replies:
         if comment.author.name == bot_username:
             return comment
     return None
+
 
 def process_row(row, activity_start_date, activity_end_date):
     """
@@ -109,7 +118,7 @@ def process_row(row, activity_start_date, activity_end_date):
     username = re.sub("/?u?/", "", row[username_key]).strip()
     print(f"Processing {username}...")
 
-    if row.get('Troll'):
+    if row.get("Troll"):
         print(f"Skipping {username} as they are marked as troll")
         return username, [], True
 
@@ -211,6 +220,7 @@ def process_row(row, activity_start_date, activity_end_date):
     print(f"Done with {username}.")
     return username, response_parts, False
 
+
 def upsert_comment_chain(voting_thread, app_comments, comment_list):
     last_comment = voting_thread
     for i, comment_body in enumerate(comment_list):
@@ -224,14 +234,19 @@ def upsert_comment_chain(voting_thread, app_comments, comment_list):
 
             # filter out these sections since they change over time negligibly.
             strip_pattern = r"### Activity in past 90 days.*?### Other Subreddits Moderated \(Subscribers\).*?###"
-            if re.sub(strip_pattern, "###", comment_body.strip(), flags=re.S) != re.sub(strip_pattern, "###", last_comment.body, flags=re.S):
+            if re.sub(strip_pattern, "###", comment_body.strip(), flags=re.S) != re.sub(
+                strip_pattern, "###", last_comment.body, flags=re.S
+            ):
                 last_comment.edit(comment_body)
+
 
 def _get_parser() -> argparse.ArgumentParser:
     new_parser = argparse.ArgumentParser(description="Post mod applications to a thread.")
     new_parser.add_argument("--application_id", required=True, type=str, help="Thread ID for mod applications.")
     new_parser.add_argument("--voting_subreddit", required=True, type=str, help="Subreddit for voting thread.")
-    new_parser.add_argument("--refresh_rate_mins", required=True, type=int, help="How long to wait between refreshes in minutes")
+    new_parser.add_argument(
+        "--refresh_rate_mins", required=True, type=int, help="How long to wait between refreshes in minutes"
+    )
     new_parser.add_argument(
         "-d",
         "--end_datetime",
@@ -239,11 +254,15 @@ def _get_parser() -> argparse.ArgumentParser:
         type=lambda d: datetime.fromisoformat(d).astimezone(timezone.utc),
         help="Datetime to stop refreshing.",
     )
-    new_parser.add_argument("-u", "--url", required=True, type=str, help="Google Sheets link to load applications from.")
+    new_parser.add_argument(
+        "-u", "--url", required=True, type=str, help="Google Sheets link to load applications from."
+    )
     return new_parser
 
+
 def normalize_google_sheets_url(url):
-    return re.search(r"(.*/d/.*?/)", url).group(1) + 'export?format=csv'
+    return re.search(r"(.*/d/.*?/)", url).group(1) + "export?format=csv"
+
 
 def main():
     parser = _get_parser()
@@ -271,7 +290,9 @@ def main():
         response = requests.get(url)
         response.raise_for_status()
 
-        legit_apps, troll_apps = process_csv(response.text, voting_thread, app_comments, app_announcement_datetime, activity_window_datetime)
+        legit_apps, troll_apps = process_csv(
+            response.text, voting_thread, app_comments, app_announcement_datetime, activity_window_datetime
+        )
 
         upsert_voting_thread(voting_subreddit, app_announcement_datetime, len(legit_apps), len(troll_apps))
 
@@ -279,6 +300,7 @@ def main():
         time.sleep(60 * args.refresh_rate_mins)
 
     print(f"Reached end time of {end_datetime}, so exiting")
+
 
 if __name__ == "__main__":
     main()
