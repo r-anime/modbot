@@ -278,7 +278,7 @@ def main():
     bot_username = config_loader.REDDIT["auth"]["username"]
 
     while datetime.now(timezone.utc) <= end_datetime:
-        print(f"Checking Responses")
+        print("Checking Responses")
         voting_thread = upsert_voting_thread(voting_subreddit, app_announcement_datetime)
 
         app_comments = {}
