@@ -53,7 +53,7 @@ If there are any troll applications, you must mark them using a `Troll` column i
 
 There are **{numb_total_apps}** legitimate applications so far and an additional **{numb_troll_apps}** troll applications not included.""".format(
         numb_total_apps=numb_total_apps, numb_troll_apps=numb_troll_apps
-    )
+    )  # noqa: E501
 
 
 def find_voting_thread(voting_subreddit, title):
