@@ -242,7 +242,7 @@ def upsert_comment_chain(voting_thread, app_comments, comment_list):
 
 def _get_parser() -> argparse.ArgumentParser:
     new_parser = argparse.ArgumentParser(description="Post mod applications to a thread.")
-    new_parser.add_argument("--application_id", required=True, type=str, help="Thread ID for mod applications.")
+    new_parser.add_argument("--application_thread_id", required=True, type=str, help="Thread ID for mod applications.")
     new_parser.add_argument("--voting_subreddit", required=True, type=str, help="Subreddit for voting thread.")
     new_parser.add_argument(
         "--refresh_rate_mins", required=True, type=int, help="How long to wait between refreshes in minutes"
@@ -269,7 +269,7 @@ def main():
     args = parser.parse_args()
 
     voting_subreddit = reddit.subreddit(args.voting_subreddit)
-    apps_thread = reddit.submission(id=args.application_id)
+    apps_thread = reddit.submission(id=args.application_thread_id)
     app_announcement_datetime = datetime.fromtimestamp(apps_thread.created_utc)
     activity_window_datetime = app_announcement_datetime - timedelta(days=90)
     url = normalize_google_sheets_url(args.url)
