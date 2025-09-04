@@ -39,7 +39,7 @@ def upsert_voting_thread(voting_subreddit, app_announcement_datetime, numb_total
 
 
 def voting_thread_title(app_announcement_datetime):
-    return f"Mod Applications — {app_announcement_datetime.strftime('%B %Y')}"
+    return f"Mod Application Voting — {app_announcement_datetime.strftime('%B %Y')}"
 
 
 def voting_thread_post_body(numb_total_apps, numb_troll_apps):
