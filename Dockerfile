@@ -1,6 +1,6 @@
 # Derived from suggestions at pythonspeed.com
 
-FROM python:3.9-slim-trixie AS compile-image
+FROM python:3.13-slim-trixie AS compile-image
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential gcc
 
@@ -13,7 +13,7 @@ RUN pip3 install --upgrade pip
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
-FROM python:3.9-slim-trixie AS build-image
+FROM python:3.13-slim-trixie AS build-image
 COPY --from=compile-image /opt/venv /opt/venv
 
 RUN mkdir -p /opt/modbot
