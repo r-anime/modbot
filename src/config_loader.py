@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 # Loads .env file's settings in when outside of container
 load_dotenv()
 
-
 REDDIT = {
     "subreddit": os.environ.get("SUBREDDIT_NAME_TO_ACT_ON"),
     "auth": {
@@ -26,6 +25,20 @@ DB_CONNECTION = (
     f'postgresql+psycopg2://{os.environ.get("DB_USER")}:{os.environ.get("DB_PASSWORD")}@'
     f'{os.environ.get("DB_HOST")}:{os.environ.get("DB_PORT")}/{os.environ.get("DB_NAME")}'
 )
+
+RABBIT = {
+    "connection":
+        f"amqp://{os.environ.get("RABBIT_USER")}:{os.environ.get("RABBIT_PASSWORD")}@"
+        f"{os.environ.get("RABBIT_HOST")}:{os.environ.get("RABBIT_PORT")}/{os.environ.get("RABBIT_VHOST")}",
+    "exchanges": [{
+        "name": os.environ.get("RABBIT_EXCHANGE"),
+        "queues": {
+            "post": {"name": os.environ.get("RABBIT_QUEUE_POSTS")},
+            "comment": {"name": os.environ.get("RABBIT_QUEUE_COMMENTS")},
+            "mod_action": {"name": os.environ.get("RABBIT_QUEUE_MOD_ACTIONS")}
+        }
+    }],
+}
 
 DISCORD = {
     "enabled": os.environ.get("DISCORD_ENABLED", "False").lower() in ["true", "t", "1", "yes", "y"],  # load as bool

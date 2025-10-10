@@ -8,11 +8,12 @@ from praw.models.reddit.submission import Submission
 
 import config_loader
 from services import post_service, base_data_service
+from services.rabbit_service import RabbitService
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
 
-def process_post(submission: Submission):
+def process_post(submission: Submission, rabbit: RabbitService):
     """
     Process a single PRAW Submission. Adds it to the database if it didn't previously exist, updates post if necessary.
     """
@@ -43,7 +44,8 @@ def process_post(submission: Submission):
         post.sent_to_feed = True
         post.discord_message_id = discord_message_id
 
-    base_data_service.update(post)
+    post = base_data_service.update(post)
+    rabbit.publish_post(submission, post)
 
     logger.debug(f"Finished processing {post.id36}")
 
@@ -58,11 +60,12 @@ def monitor_stream():
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+            rabbit = RabbitService(config_loader.RABBIT)
             logger.info("Loading flairs...")
             post_service.load_post_flairs(subreddit)
             logger.info("Starting submission stream...")
             for submission in subreddit.stream.submissions(skip_existing=False):
-                process_post(submission)
+                process_post(submission, rabbit)
         except Exception:
             delay_time = 30
             logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")

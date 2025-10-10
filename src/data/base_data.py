@@ -1,5 +1,7 @@
 from copy import copy
 from typing import Union
+from datetime import datetime
+from decimal import Decimal
 
 import psycopg2.extensions
 import psycopg2.extras
@@ -55,6 +57,25 @@ class BaseModel:
                 self._modified[key] = value
 
         object.__setattr__(self, key, value)
+
+    def to_dict(self):
+        """
+        Returns a plain dict representation of the model.
+        Handles datetimes and other non-JSON-safe types.
+        """
+        data = {}
+
+        for col in self._columns:
+            value = getattr(self, col, None)
+
+            if isinstance(value, datetime):
+                value = value.isoformat()
+            elif isinstance(value, Decimal):
+                value = float(value)
+
+            data[col] = value
+
+        return data
 
     def __str__(self):
         return f"<{self.__class__.__name__}: {self._pk_field}={getattr(self, self._pk_field, None)}>"
