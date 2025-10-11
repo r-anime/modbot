@@ -36,6 +36,7 @@ class RabbitService:
         logger.info("Connecting to RabbitMQ...")
         connection = pika.BlockingConnection(pika.URLParameters(config_dict["connection"]))
         self.channel = connection.channel()
+        self.channel.confirm_delivery
         self.queues = {}
 
         for exchange in config_dict["exchanges"]:
@@ -52,7 +53,10 @@ class RabbitService:
         queue = self.queues["post"]
         body = {"status": status, "reddit": reddit_post, "db": post.to_dict()}
         self.channel.basic_publish(
-            exchange=queue["exchange"], routing_key=queue["queue"], body=json.dumps(body, cls=PRAWJSONEncoder)
+            exchange=queue["exchange"],
+            routing_key=queue["queue"],
+            body=json.dumps(body, cls=PRAWJSONEncoder),
+            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent),
         )
 
     def publish_comment(self, reddit_comment: Comment, comment: CommentModel, status: str = "new"):
@@ -60,7 +64,10 @@ class RabbitService:
         queue = self.queues["comment"]
         body = {"status": status, "reddit": reddit_comment, "db": comment.to_dict()}
         self.channel.basic_publish(
-            exchange=queue["exchange"], routing_key=queue["queue"], body=json.dumps(body, cls=PRAWJSONEncoder)
+            exchange=queue["exchange"],
+            routing_key=queue["queue"],
+            body=json.dumps(body, cls=PRAWJSONEncoder),
+            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent),
         )
 
     def publish_mod_action(self, reddit_mod_action: ModAction, mod_action: ModActionModel, status: str = "new"):
@@ -68,5 +75,8 @@ class RabbitService:
         queue = self.queues["mod_action"]
         body = {"status": status, "reddit": reddit_mod_action, "db": mod_action.to_dict()}
         self.channel.basic_publish(
-            exchange=queue["exchange"], routing_key=queue["queue"], body=json.dumps(body, cls=PRAWJSONEncoder)
+            exchange=queue["exchange"],
+            routing_key=queue["queue"],
+            body=json.dumps(body, cls=PRAWJSONEncoder),
+            properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent),
         )
