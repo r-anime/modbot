@@ -27,17 +27,18 @@ DB_CONNECTION = (
 )
 
 RABBIT = {
-    "connection":
-        f"amqp://{os.environ.get("RABBIT_USER")}:{os.environ.get("RABBIT_PASSWORD")}@"
-        f"{os.environ.get("RABBIT_HOST")}:{os.environ.get("RABBIT_PORT")}/{os.environ.get("RABBIT_VHOST")}",
-    "exchanges": [{
-        "name": os.environ.get("RABBIT_EXCHANGE"),
-        "queues": {
-            "post": {"name": os.environ.get("RABBIT_QUEUE_POSTS")},
-            "comment": {"name": os.environ.get("RABBIT_QUEUE_COMMENTS")},
-            "mod_action": {"name": os.environ.get("RABBIT_QUEUE_MOD_ACTIONS")}
+    "connection": f"amqp://{os.environ.get("RABBIT_USER")}:{os.environ.get("RABBIT_PASSWORD")}@"
+    f"{os.environ.get("RABBIT_HOST")}:{os.environ.get("RABBIT_PORT")}/{os.environ.get("RABBIT_VHOST")}",
+    "exchanges": [
+        {
+            "name": os.environ.get("RABBIT_EXCHANGE"),
+            "queues": {
+                "post": {"name": os.environ.get("RABBIT_QUEUE_POSTS")},
+                "comment": {"name": os.environ.get("RABBIT_QUEUE_COMMENTS")},
+                "mod_action": {"name": os.environ.get("RABBIT_QUEUE_MOD_ACTIONS")},
+            },
         }
-    }],
+    ],
 }
 
 DISCORD = {
