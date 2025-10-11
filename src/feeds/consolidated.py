@@ -30,7 +30,7 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
-            rabbit = RabbitService(config_loader.RABBIT)
+            rabbit = RabbitService(config_loader.RABBITMQ)
             mod_log.get_moderators()
             logger.debug("Loading flairs...")
             post_service.load_post_flairs(subreddit)

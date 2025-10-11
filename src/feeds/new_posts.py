@@ -60,7 +60,7 @@ def monitor_stream():
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
-            rabbit = RabbitService(config_loader.RABBIT)
+            rabbit = RabbitService(config_loader.RABBITMQ)
             logger.info("Loading flairs...")
             post_service.load_post_flairs(subreddit)
             logger.info("Starting submission stream...")

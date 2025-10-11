@@ -26,16 +26,16 @@ DB_CONNECTION = (
     f'{os.environ.get("DB_HOST")}:{os.environ.get("DB_PORT")}/{os.environ.get("DB_NAME")}'
 )
 
-RABBIT = {
-    "connection": f"amqp://{os.environ.get("RABBIT_USER")}:{os.environ.get("RABBIT_PASSWORD")}@"
-    f"{os.environ.get("RABBIT_HOST")}:{os.environ.get("RABBIT_PORT")}/{os.environ.get("RABBIT_VHOST")}",
+RABBITMQ = {
+    "connection": f"amqp://{os.environ.get("RABBITMQ_USER")}:{os.environ.get("RABBITMQ_PASS")}@"
+    f"{os.environ.get("RABBITMQ_HOST")}:{os.environ.get("RABBITMQ_PORT")}{os.environ.get("RABBITMQ_VHOST")}",
     "exchanges": [
         {
-            "name": os.environ.get("RABBIT_EXCHANGE"),
+            "name": os.environ.get("RABBITMQ_EXCHANGE"),
             "queues": {
-                "post": {"name": os.environ.get("RABBIT_QUEUE_POSTS")},
-                "comment": {"name": os.environ.get("RABBIT_QUEUE_COMMENTS")},
-                "mod_action": {"name": os.environ.get("RABBIT_QUEUE_MOD_ACTIONS")},
+                "post": {"name": os.environ.get("RABBITMQ_QUEUE_POSTS")},
+                "comment": {"name": os.environ.get("RABBITMQ_QUEUE_COMMENTS")},
+                "mod_action": {"name": os.environ.get("RABBITMQ_QUEUE_MOD_ACTIONS")},
             },
         }
     ],

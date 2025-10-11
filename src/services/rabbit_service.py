@@ -34,11 +34,7 @@ class PRAWJSONEncoder(JSONEncoder):
 class RabbitService:
     def __init__(self, config_dict: dict):
         logger.info("Connecting to RabbitMQ...")
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host="127.0.0.1", port=5672, virtual_host="/", credentials=pika.PlainCredentials("guest", "guest")
-            )
-        )
+        connection = pika.BlockingConnection(pika.URLParameters(config_dict["connection"]))
         self.channel = connection.channel()
         self.queues = {}
 

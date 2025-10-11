@@ -56,7 +56,7 @@ def monitor_stream():
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
-            rabbit = RabbitService(config_loader.RABBIT)
+            rabbit = RabbitService(config_loader.RABBITMQ)
             logger.info("Starting comment stream...")
             for comment in subreddit.stream.comments(skip_existing=False):
                 process_comment(comment, reddit, rabbit)
