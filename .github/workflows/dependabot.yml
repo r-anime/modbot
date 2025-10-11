@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 100 # should never get close to this value. This is effectively no limit.
+    files:
+      - "requirements.txt"
+      - "requirements-tools.txt"
+    groups:
+      patch-minor:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 100 # should never get close to this value. This is effectively no limit.
+    groups:
+      all:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 100 # should never get close to this value. This is effectively no limit.
+    groups:
+      all:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
