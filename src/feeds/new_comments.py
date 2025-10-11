@@ -23,8 +23,9 @@ def process_comment(reddit_comment: Comment, reddit, rabbit: RabbitService):
 
     if comment:
         # Update our record of the comment if necessary.
-        updated_comment = comment_service.update_comment(comment, reddit_comment)
-        rabbit.publish_comment(reddit_comment, updated_comment, "update")
+        comment_service.update_comment(comment, reddit_comment)
+        # updated_comment = comment_service.update_comment(comment, reddit_comment)
+        # rabbit.publish_comment(reddit_comment, updated_comment, "update")
         return
 
     author_name = reddit_comment.author.name if reddit_comment.author is not None else "[deleted]"
