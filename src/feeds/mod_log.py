@@ -14,6 +14,7 @@ import config_loader
 from constants import mod_constants
 from data.mod_action_data import ModActionModel
 from services import base_data_service, comment_service, mod_action_service, post_service, user_service
+from services.rabbit_service import RabbitService
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
@@ -22,7 +23,7 @@ from utils.logger import logger
 active_mods = []
 
 
-def parse_mod_action(mod_action: ModAction, reddit, subreddit):
+def parse_mod_action(mod_action: ModAction, reddit, subreddit, rabbit: RabbitService):
     """
     Process a single PRAW ModAction. Assumes that reddit and subreddit are already instantiated by
     one of the two entry points (monitor_stream or load_archive).
@@ -226,10 +227,11 @@ def parse_mod_action(mod_action: ModAction, reddit, subreddit):
             base_data_service.update(comment)
 
     logger.debug(f"Saving mod action {mod_action_id}")
-    mod_action = mod_action_service.add_mod_action(mod_action)
+    mod_action_db = mod_action_service.add_mod_action(mod_action)
+    rabbit.publish_mod_action(mod_action, mod_action_db)
 
     if send_notification:
-        send_discord_message(mod_action)
+        send_discord_message(mod_action_db)
 
 
 def send_discord_message(mod_action: ModActionModel):
@@ -282,12 +284,13 @@ def monitor_stream():
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+            rabbit = RabbitService(config_loader.RABBITMQ)
             get_moderators()
             logger.info("Loading flairs...")
             post_service.load_post_flairs(subreddit)
             logger.info("Starting mod log stream...")
             for mod_action in subreddit.mod.stream.log():
-                parse_mod_action(mod_action, reddit, subreddit)
+                parse_mod_action(mod_action, reddit, subreddit, rabbit)
         except Exception:
             delay_time = 30
             logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")

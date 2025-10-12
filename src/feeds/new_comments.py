@@ -8,11 +8,12 @@ from praw.models.reddit.comment import Comment
 
 import config_loader
 from services import post_service, comment_service
+from services.rabbit_service import RabbitService
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
 
-def process_comment(reddit_comment: Comment, reddit):
+def process_comment(reddit_comment: Comment, reddit, rabbit: RabbitService):
     """
     Process a single PRAW Comment. Adds it to the database if it didn't previously exist as well as parent comments
     and the thread it belongs to.
@@ -23,6 +24,8 @@ def process_comment(reddit_comment: Comment, reddit):
     if comment:
         # Update our record of the comment if necessary.
         comment_service.update_comment(comment, reddit_comment)
+        # updated_comment = comment_service.update_comment(comment, reddit_comment)
+        # rabbit.publish_comment(reddit_comment, updated_comment, "update")
         return
 
     author_name = reddit_comment.author.name if reddit_comment.author is not None else "[deleted]"
@@ -40,6 +43,7 @@ def process_comment(reddit_comment: Comment, reddit):
     logger.debug(f"Saving comment {reddit_comment.id}")
     comment = comment_service.add_comment(reddit_comment)
 
+    rabbit.publish_comment(reddit_comment, comment)
     logger.debug(f"Finished processing {comment.id36}")
 
 
@@ -53,9 +57,10 @@ def monitor_stream():
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+            rabbit = RabbitService(config_loader.RABBITMQ)
             logger.info("Starting comment stream...")
             for comment in subreddit.stream.comments(skip_existing=False):
-                process_comment(comment, reddit)
+                process_comment(comment, reddit, rabbit)
         except Exception:
             delay_time = 30
             logger.exception(f"Encountered an unexpected error, restarting in {delay_time} seconds...")

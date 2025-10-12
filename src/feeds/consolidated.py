@@ -11,6 +11,7 @@ import time
 import config_loader
 from feeds import mod_log, new_comments, new_posts
 from services import post_service
+from services.rabbit_service import RabbitService
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
@@ -29,6 +30,7 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
             logger.info("Connecting to Reddit...")
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+            rabbit = RabbitService(config_loader.RABBITMQ)
             mod_log.get_moderators()
             logger.debug("Loading flairs...")
             post_service.load_post_flairs(subreddit)
@@ -49,7 +51,7 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
                         if mod_action is None:
                             time.sleep(3)
                             break
-                        mod_log.parse_mod_action(mod_action, reddit, subreddit)
+                        mod_log.parse_mod_action(mod_action, reddit, subreddit, rabbit)
 
                 if posts:
                     logger.debug("Starting post stream...")
@@ -57,7 +59,7 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
                         if submission is None:
                             time.sleep(3)
                             break
-                        new_posts.process_post(submission)
+                        new_posts.process_post(submission, rabbit)
 
                 if comments:
                     logger.debug("Starting comment stream...")
@@ -65,7 +67,7 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
                         if comment is None:
                             time.sleep(3)
                             break
-                        new_comments.process_comment(comment, reddit)
+                        new_comments.process_comment(comment, reddit, rabbit)
 
                 if spam:
                     logger.debug("Starting spam stream...")
@@ -74,9 +76,9 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
                             time.sleep(3)
                             break
                         if item.fullname.startswith("t1_"):
-                            new_comments.process_comment(item, reddit)
+                            new_comments.process_comment(item, reddit, rabbit)
                         elif item.fullname.startswith("t3_"):
-                            new_posts.process_post(item)
+                            new_posts.process_post(item, rabbit)
 
         except Exception:
             delay_time = 30
