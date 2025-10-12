@@ -1,13 +1,14 @@
 import json
 import pika
 import praw
+from collections import deque
 from json import JSONEncoder
 from praw.models.mod_action import ModAction
 from praw.models.reddit.comment import Comment
 from praw.models.reddit.submission import Submission
 from types import FunctionType
+from typing import Deque
 from uuid import UUID
-from collections import deque
 
 from data.comment_data import CommentModel
 from data.mod_action_data import ModActionModel
