@@ -331,6 +331,7 @@ def load_archive(archive_args: argparse.Namespace):
             # Since the parse_mod_action function relies on reddit and subreddit existing in the global scope.
             reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
             subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
+            rabbit = RabbitService(config_loader.RABBITMQ)
             # Not exactly sure of behavior when running past what's available, but this attempts to track when there
             # aren't any processed so we can reasonably drop out.
             actions_processed = 0
@@ -343,7 +344,7 @@ def load_archive(archive_args: argparse.Namespace):
                         current_timestamp = mod_action.created_utc
                         break
 
-                    parse_mod_action(mod_action, reddit, subreddit)
+                    parse_mod_action(mod_action, reddit, subreddit, rabbit)
                     actions_processed += 1
 
                     # The earliest action in the batch and will be the start of the next loop.
