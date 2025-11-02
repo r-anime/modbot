@@ -46,11 +46,38 @@ class RabbitService:
         for exchange in self.config["exchanges"]:
             logger.info(f"Declaring RabbitMQ Exchange {exchange["name"]}")
             self.channel.exchange_declare(exchange=exchange["name"], exchange_type="direct", durable=True)
+
+            exchange_name = exchange["name"]
+            dlx_exchange_prefix = self.config["dead_letter_exchange_prefix"]
+            dead_letter_exchange_name = f"{exchange_name}.{dlx_exchange_prefix}"
+            logger.info(f"Declaring Dead Letter Exchange {dead_letter_exchange_name}")
+            self.channel.exchange_declare(exchange=dead_letter_exchange_name, exchange_type="direct", durable=True)
+
+            retry_exchange_name_prefix = self.config["retry_exchange_prefix"]
+            retry_exchange_name = f"{exchange_name}.{retry_exchange_name_prefix}"
+            logger.info(f"Declaring Retry Exchange {retry_exchange_name}")
+            self.channel.exchange_declare(exchange=retry_exchange_name, exchange_type="direct", durable=True)
+
             for key, queue in exchange["queues"].items():
-                logger.info(f"Declaring RabbitMQ Queue {queue["name"]}")
-                self.channel.queue_declare(queue=queue["name"], durable=True)
-                self.channel.queue_bind(exchange=exchange["name"], queue=queue["name"], routing_key=queue["name"])
-                self.queues[key] = {"exchange": exchange["name"], "queue": queue["name"]}
+                queue_name = queue["name"]
+                dead_letter_queue_name = f"{dlx_exchange_prefix}.{queue_name}"
+                retry_queue_name = f"{retry_exchange_name_prefix}.{queue_name}"
+
+                logger.info(f"Declaring Dead Letter Queue {dead_letter_queue_name}")
+                self.channel.queue_declare(queue=dead_letter_queue_name, durable=True)
+                self.channel.queue_bind(
+                    exchange=dead_letter_exchange_name, queue=dead_letter_queue_name, routing_key=queue_name
+                )
+
+                logger.info(f"Declaring Retry Queue {retry_exchange_name}")
+                self.channel.queue_declare(queue=retry_queue_name, durable=True)
+                self.channel.queue_bind(exchange=retry_exchange_name, queue=retry_queue_name, routing_key=queue_name)
+
+                logger.info(f"Declaring RabbitMQ Queue {queue_name}")
+                self.channel.queue_declare(queue=queue_name, durable=True)
+                self.channel.queue_bind(exchange=exchange_name, queue=queue_name, routing_key=queue_name)
+
+                self.queues[key] = {"exchange": exchange_name, "queue": queue_name}
 
         if self.messages_to_retry:
             logger.info(f"Retrying {len(self.messages_to_retry)} RabbitMQ messages")
@@ -88,7 +115,9 @@ class RabbitService:
                 exchange=exchange_name,
                 routing_key=queue_name,
                 body=json_body,
-                properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent),
+                properties=pika.BasicProperties(
+                    delivery_mode=pika.DeliveryMode.Persistent, headers={self.config["retry_attempt_header"]: 1}
+                ),
             )
         except Exception:
             try:

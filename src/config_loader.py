@@ -29,6 +29,9 @@ DB_CONNECTION = (
 RABBITMQ = {
     "connection": f"amqp://{os.environ.get("RABBITMQ_USER")}:{os.environ.get("RABBITMQ_PASS")}@"
     f"{os.environ.get("RABBITMQ_HOST")}:{os.environ.get("RABBITMQ_PORT")}{os.environ.get("RABBITMQ_VHOST")}",
+    "dead_letter_exchange_prefix": os.environ.get("RABBITMQ_DL_EXCHANGE_PREFIX"),
+    "retry_exchange_prefix": os.environ.get("RABBITMQ_RETRY_EXCHANGE_PREFIX"),
+    "retry_attempt_header": os.environ.get("RABBITMQ_RETRY_ATTEMPT_HEADER"),
     "exchanges": [
         {
             "name": os.environ.get("RABBITMQ_EXCHANGE"),
