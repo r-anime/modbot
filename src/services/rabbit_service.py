@@ -116,7 +116,9 @@ class RabbitService:
                 routing_key=queue_name,
                 body=json_body,
                 properties=pika.BasicProperties(
-                    delivery_mode=pika.DeliveryMode.Persistent, headers={self.config["retry_attempt_header"]: 1}
+                    delivery_mode=pika.DeliveryMode.Persistent,
+                    content_type="application/json",
+                    headers={self.config["retry_attempt_header"]: 1},
                 ),
             )
         except Exception:
@@ -126,7 +128,11 @@ class RabbitService:
                     exchange=exchange_name,
                     routing_key=queue_name,
                     body=json_body,
-                    properties=pika.BasicProperties(delivery_mode=pika.DeliveryMode.Persistent),
+                    properties=pika.BasicProperties(
+                        delivery_mode=pika.DeliveryMode.Persistent,
+                        content_type="application/json",
+                        headers={self.config["retry_attempt_header"]: 1},
+                    ),
                 )
                 logger.info("Successfully send message after reconnect")
             except Exception:
