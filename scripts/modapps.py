@@ -289,6 +289,7 @@ def main():
 
         response = requests.get(url)
         response.raise_for_status()
+        response.encoding = "utf-8"
 
         legit_apps, troll_apps = process_csv(
             response.text, voting_thread, app_comments, app_announcement_datetime, activity_window_datetime
