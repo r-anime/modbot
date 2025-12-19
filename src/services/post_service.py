@@ -31,6 +31,14 @@ def get_posts_by_username(username: str, start_date: str = None, end_date: str =
     return _post_data.get_posts_by_username(username, start_date, end_date)
 
 
+def get_post_count_by_username(username: str, start_date: str = None, end_date: str = None) -> list[PostModel]:
+    """
+    Gets the number of posts by a user, optionally within a specified time frame.
+    """
+
+    return _post_data.get_post_count_by_username(username, start_date, end_date)
+
+
 def get_flaired_posts_by_username(
     username: str,
     flairs: list[str],
