@@ -11,7 +11,6 @@ from datetime import datetime, timezone, timedelta
 import re
 import requests
 from io import StringIO
-import gc
 
 import config_loader
 from services import comment_service, post_service, mod_action_service
@@ -298,7 +297,6 @@ def main():
 
         upsert_voting_thread(voting_subreddit, app_announcement_datetime, len(legit_apps), len(troll_apps))
 
-        gc.collect()
         print(f"sleeping for {60 * args.refresh_rate_mins}")
         time.sleep(60 * args.refresh_rate_mins)
 
