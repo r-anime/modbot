@@ -94,6 +94,39 @@ class CommentData(BaseData):
         result_rows = self.execute(sql, **sql_kwargs)
         return [CommentModel(row) for row in result_rows]
 
+    def get_comment_count_by_username(
+        self, username: str, start_date: str = None, end_date: str = None, exclude_cdf: bool = False
+    ) -> int:
+        where_clauses = ["lower(c.author) = :username"]
+        sql_kwargs = {"username": username.lower()}
+
+        if start_date:
+            where_clauses.append("c.created_time >= :start_date")
+            sql_kwargs["start_date"] = start_date
+
+        if end_date:
+            where_clauses.append("c.created_time < :end_date")
+            sql_kwargs["end_date"] = end_date
+
+        where_str = " AND ".join(where_clauses)
+
+        if exclude_cdf:
+            sql = text(
+                f"""
+                SELECT COUNT(*) FROM comments c JOIN posts p ON c.post_id = p.id
+                WHERE {where_str} AND p.title not like 'Casual Discussion Fridays - Week of %'
+                """
+            )
+        else:
+            sql = text(
+                f"""
+                SELECT COUNT(*) FROM comments c
+                WHERE {where_str};
+                """
+            )
+
+        return self.execute(sql, **sql_kwargs)[0][0]
+
     def get_comment_count(self, start_date: str = None, end_date: str = None, exclude_authors: list = None) -> int:
         where_clauses = []
         sql_kwargs = {}

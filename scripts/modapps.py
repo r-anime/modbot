@@ -11,6 +11,7 @@ from datetime import datetime, timezone, timedelta
 import re
 import requests
 from io import StringIO
+import gc
 
 import config_loader
 from services import comment_service, post_service, mod_action_service
@@ -133,15 +134,15 @@ def process_row(row, activity_start_date, activity_end_date):
     # and overall history on /r/anime.
     activity_start_time_str = activity_start_date.isoformat()
     activity_end_time_str = activity_end_date.isoformat()
-    user_comments_window_with_cdf = len(
-        comment_service.get_comments_by_username(username, activity_start_time_str, activity_end_time_str)
+    user_comments_window_with_cdf = comment_service.get_comment_count_by_username(
+        username, activity_start_time_str, activity_end_time_str
     )
-    user_comments_window = len(
-        comment_service.get_comments_by_username(username, activity_start_time_str, activity_end_time_str, True)
+    user_comments_window = comment_service.get_comment_count_by_username(
+        username, activity_start_time_str, activity_end_time_str, True
     )
     cdf_window = user_comments_window_with_cdf - user_comments_window
-    user_posts_window = len(
-        post_service.get_posts_by_username(username, activity_start_time_str, activity_end_time_str)
+    user_posts_window = post_service.get_post_count_by_username(
+        username, activity_start_time_str, activity_end_time_str
     )
     user_targeted_mod_actions = mod_action_service.get_mod_actions_targeting_username(username, start_date="2021-01-01")
     mod_actions = {}
@@ -153,10 +154,10 @@ def process_row(row, activity_start_date, activity_end_date):
     sorted_mod_actions = sorted(mod_actions.items(), key=lambda item: (-len(item[1]), item[0]))
     mod_actions_str = ", ".join(f"{action} ({len(action_list):,})" for action, action_list in sorted_mod_actions)
 
-    user_comments_total_with_cdf = len(comment_service.get_comments_by_username(username, "2020-01-01"))
-    user_comments_total = len(comment_service.get_comments_by_username(username, "2020-01-01", exclude_cdf=True))
+    user_comments_total_with_cdf = comment_service.get_comment_count_by_username(username, "2020-01-01")
+    user_comments_total = comment_service.get_comment_count_by_username(username, "2020-01-01", exclude_cdf=True)
     cdf_total = user_comments_total_with_cdf - user_comments_total
-    user_posts_total = len(post_service.get_posts_by_username(username, "2020-01-01"))
+    user_posts_total = post_service.get_post_count_by_username(username, "2020-01-01")
 
     passes_activity_threshold = "✅" if user_comments_window + user_posts_window > 50 else "❌"
 
@@ -297,6 +298,7 @@ def main():
 
         upsert_voting_thread(voting_subreddit, app_announcement_datetime, len(legit_apps), len(troll_apps))
 
+        gc.collect()
         print(f"sleeping for {60 * args.refresh_rate_mins}")
         time.sleep(60 * args.refresh_rate_mins)
 

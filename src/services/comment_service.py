@@ -43,6 +43,16 @@ def get_comments_by_username(
     return _comment_data.get_comments_by_username(username, start_date, end_date, exclude_cdf)
 
 
+def get_comment_count_by_username(
+    username: str, start_date: str = None, end_date: str = None, exclude_cdf: bool = False
+) -> int:
+    """
+    Gets the number of comments by a user, optionally within a specified time frame.
+    """
+
+    return _comment_data.get_comment_count_by_username(username, start_date, end_date, exclude_cdf)
+
+
 def count_comments(start_date: date = None, end_date: date = None, exclude_authors: list = None) -> int:
     """
     Gets number of comments made in the given date range.
