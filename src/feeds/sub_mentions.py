@@ -1,5 +1,6 @@
 import re
 import time
+import datetime
 
 import config_loader
 from utils import discord, reddit as reddit_utils
@@ -7,6 +8,20 @@ from utils.logger import logger
 
 
 colour = 22135
+
+
+def send_error_discord(message, error_message: str):
+    title = error_message
+
+    timestamp = datetime.datetime.fromtimestamp(message.created_utc, datetime.timezone.utc).strftime(
+        "%Y-%m-%d %H:%M:%S %Z"
+    )
+    desc = f"Error processing message from {message.author} @ {timestamp}:\n---\n{message.body}"
+    if len(desc) >= 2000:  # message length (max for webhook is 2000)
+        desc = desc[:1997] + "..."
+
+    embed_json = {"title": title, "description": desc, "color": 16711680}  # Red color
+    discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
 
 def check_inbox(reddit):
@@ -19,6 +34,10 @@ def check_inbox(reddit):
         message_body = message.body
         message_body = re.sub("\n\n___\n\n", "\n\n---\n\n", message_body, count=2)  # standardize template
         message_body = re.sub("\n\n____\n\n", "\n\n---\n\n", message_body, count=2)  # standardize template
+        if "\n\n---\n\n" not in message_body:
+            send_error_discord(message, "Could not find `\\n\\n---\\n\\n` in the message body")
+            message.mark_read()
+            continue
         header, body = message_body.split("\n\n---\n\n", 1)
         if body.startswith("---"):
             body = "\n\n" + body
