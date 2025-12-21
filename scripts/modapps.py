@@ -47,7 +47,7 @@ def voting_thread_post_body(numb_total_apps, numb_troll_apps):
 
 Extensive debates and trash talking can go in the proper Discord channel, which will be expunged before bringing new mods on board.
 
-Vote [yes](#yes) or [no](#no) on each application. As usual there's no well-established threshold or simple majority so it might take some talking to determine who makes the cut.
+Vote [yes](#yes), [no](#no), or [undecided](#undecided) on each application. As usual there's no well-established threshold or simple majority so it might take some talking to determine who makes the cut.
 
 If there are any troll applications, you must mark them using a `Troll` column in the form responses (it just needs to non empty). Note that you will need to be on the AnimeMod account to edit it.
 
