@@ -190,7 +190,8 @@ class BaseData:
             WHERE {model.pk_field} = :pk"""
         )
 
-        return self.execute(sql, pk=getattr(model, model.pk_field))
+        with session_scope() as session:
+            return session.execute(sql, {"pk": getattr(model, model.pk_field)}).rowcount
 
     def execute(self, sql: Union[str, text], **kwargs):
         if isinstance(sql, str):
