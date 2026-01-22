@@ -6,7 +6,6 @@ from prawcore.exceptions import NotFound
 
 from data.user_data import UserData, UserModel
 
-
 _user_data = UserData()
 
 

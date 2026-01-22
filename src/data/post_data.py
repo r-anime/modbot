@@ -42,12 +42,10 @@ class PostModel(BaseModel):
 
 class PostData(BaseData):
     def get_post_by_id(self, post_id: int) -> Optional[PostModel]:
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM posts
         WHERE id = :post_id;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, post_id=post_id)
         if not result_rows:
@@ -69,12 +67,10 @@ class PostData(BaseData):
 
         where_str = " AND ".join(where_clauses)
 
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT * FROM posts
         WHERE {where_str};
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, **sql_kwargs)
         return [PostModel(row) for row in result_rows]
@@ -93,12 +89,10 @@ class PostData(BaseData):
 
         where_str = " AND ".join(where_clauses)
 
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT COUNT(*) FROM posts
         WHERE {where_str};
-        """
-        )
+        """)
 
         return self.execute(sql, **sql_kwargs)[0][0]
 
@@ -132,13 +126,11 @@ class PostData(BaseData):
 
         where_str = " AND ".join(where_clauses)
 
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT * FROM posts
         WHERE {where_str}
         ORDER BY created_time ASC;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, **sql_kwargs)
         return [PostModel(row) for row in result_rows]
@@ -160,12 +152,10 @@ class PostData(BaseData):
             sql_kwargs["exclude_authors"] = tuple(exclude_authors)
 
         where_str = " AND ".join(where_clauses)
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT COUNT(*) FROM posts
         WHERE {where_str};
-        """
-        )
+        """)
 
         # Will return a list of tuples with only one item in each, e.g. [(2910,)]
         result = self.execute(sql, **sql_kwargs)
@@ -188,12 +178,10 @@ class PostData(BaseData):
             sql_kwargs["exclude_authors"] = tuple(exclude_authors)
 
         where_str = " AND ".join(where_clauses)
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT COUNT(DISTINCT author) FROM posts
         WHERE {where_str};
-        """
-        )
+        """)
 
         # Will return a list of tuples with only one item in each, e.g. [(2910,)]
         result = self.execute(sql, **sql_kwargs)

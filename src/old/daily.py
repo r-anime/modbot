@@ -8,7 +8,6 @@ from old.menuupdater import SubredditMenuUpdater
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
-
 name = "Anime Questions, Recommendations, and Discussion"
 short_name = "Daily Megathread"
 author = "AnimeMod"
@@ -39,15 +38,13 @@ logger.debug(f'Found old daily id {old_daily.id} "{old_daily.title}"')
 
 
 # Step 1: Notify old daily that the new daily is up
-notify_comment = old_daily.reply(
-    f"""
+notify_comment = old_daily.reply(f"""
 Hello /r/anime, a new daily thread has been posted! Please follow
 [this link]({new_daily.permalink}) to move on to the new thread
 or [search for the latest thread](/r/{subreddit}/search?q=flair%3ADaily&restrict_sr=on&sort=new).
 
 [](#heartbot "And don't forget to be nice to new users!")
-"""
-)
+""")
 notify_comment.disable_inbox_replies()
 notify_comment.mod.distinguish(sticky=True)
 

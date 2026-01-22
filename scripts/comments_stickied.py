@@ -21,13 +21,11 @@ _mod_action_data = mod_action_service.ModActionData()
 def get_comments_in_period(
     post: post_service.PostModel, start_time: datetime, end_time: datetime
 ) -> list[comment_service.CommentModel]:
-    sql = text(
-        """
+    sql = text("""
     select comments.* from comments join posts p on comments.post_id = p.id
     where comments.post_id = :post_id and
     comments.created_time >= :start and comments.created_time < :end;
-    """
-    )
+    """)
 
     rows = _comment_data.execute(sql, post_id=post.id, start=start_time, end=end_time)
     comment_list = [comment_service.CommentModel(row) for row in rows]
@@ -39,14 +37,12 @@ def get_post_sticky_times(post: post_service.PostModel) -> list[tuple]:
     """Get each time a post was stickied/unstickied. Returns a list of tuples with sticky/unsticky times."""
 
     logger.debug(f"Getting sticky times for {post.id36}")
-    sql = text(
-        """
+    sql = text("""
     select * from mod_actions
     where target_post_id = :post_id and target_comment_id is null
     and action in ('sticky', 'unsticky')
     order by created_time;
-    """
-    )
+    """)
     rows = _mod_action_data.execute(sql, post_id=post.id)
     action_list = [mod_action_service.ModActionModel(row) for row in rows]
 
@@ -83,15 +79,13 @@ def get_weekly_posts(start_date: datetime = None, end_date: datetime = None) -> 
     if not end_date:
         end_date = datetime.now(tz=timezone.utc)
 
-    sql = text(
-        """
+    sql = text("""
     select * from posts
     where flair_text = 'Weekly' and author in ('AutoModerator', 'AnimeMod')
     and created_time >= :start and created_time < :end
     and removed is false
     order by created_time;
-    """
-    )
+    """)
 
     rows = _post_data.execute(sql, start=start_date, end=end_date)
     post_list = [post_service.PostModel(row) for row in rows]

@@ -18,7 +18,6 @@ from services.rabbit_service import RabbitService
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
-
 # Cache a list of moderator usernames so we can tell if an action is taken by admins.
 active_mods = []
 

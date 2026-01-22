@@ -16,18 +16,14 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE posts ADD COLUMN IF NOT EXISTS metadata jsonb;
         ALTER TABLE posts ADD COLUMN IF NOT EXISTS discord_message_id varchar(64);
-        """
-    )
+        """)
 
 
 def downgrade():
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE posts DROP COLUMN IF EXISTS discord_message_id;
         ALTER TABLE posts DROP COLUMN IF EXISTS metadata;
-        """
-    )
+        """)

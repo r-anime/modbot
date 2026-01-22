@@ -8,7 +8,6 @@ Create Date: 2021-03-04 04:28:47.138468+00:00
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
 revision = "02533d88ffd0"
 down_revision = None
@@ -17,8 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
     CREATE TABLE IF NOT EXISTS users (
         username varchar(40) primary key,
         created_time timestamptz,
@@ -77,16 +75,13 @@ def upgrade():
         target_comment_id bigint references comments(id)
     );
     CREATE INDEX IF NOT EXISTS mod_actions_mod_lower_key ON mod_actions (lower(mod));
-    """
-    )
+    """)
 
 
 def downgrade():
-    op.execute(
-        """
+    op.execute("""
     DROP TABLE IF EXISTS mod_actions;
     DROP TABLE IF EXISTS comments;
     DROP TABLE IF EXISTS posts;
     DROP TABLE IF EXISTS users;
-    """
-    )
+    """)

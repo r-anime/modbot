@@ -6,7 +6,6 @@ import config_loader
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
-
 colour = 22135
 
 

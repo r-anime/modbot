@@ -9,7 +9,6 @@ import config_loader
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
-
 # TODO: verified flairs?
 CSS_EMOJI = {
     "a-amq": ":AMQ:",

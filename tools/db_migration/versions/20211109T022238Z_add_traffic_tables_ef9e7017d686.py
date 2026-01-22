@@ -16,8 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
     CREATE TABLE IF NOT EXISTS traffic_monthly (
         id serial primary key,
         date date not null UNIQUE,
@@ -34,17 +33,14 @@ def upgrade():
 
     ALTER TABLE snapshots ADD COLUMN IF NOT EXISTS unique_pageviews int;
     ALTER TABLE snapshots ADD COLUMN IF NOT EXISTS total_pageviews int;
-    """
-    )
+    """)
 
 
 def downgrade():
-    op.execute(
-        """
+    op.execute("""
     ALTER TABLE snapshots DROP COLUMN IF EXISTS total_pageviews;
     ALTER TABLE snapshots DROP COLUMN IF EXISTS unique_pageviews;
 
     DROP TABLE IF EXISTS traffic_daily;
     DROP TABLE IF EXISTS traffic_monthly;
-    """
-    )
+    """)

@@ -5,7 +5,6 @@ import config_loader
 
 from contextlib import contextmanager
 
-
 Session = None
 
 
