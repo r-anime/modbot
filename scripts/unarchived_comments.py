@@ -19,13 +19,11 @@ _post_data = post_service.PostData()
 
 def get_comments_on_old_posts() -> list[comment_service.CommentModel]:
     logger.info("Getting comments...")
-    sql = text(
-        """
+    sql = text("""
     select comments.* from comments join posts p on comments.post_id = p.id join users u on comments.author = u.username
     where comments.created_time >= '2021-10-01' and comments.created_time >= p.created_time + '6 months'
     and u.moderator is FALSE;
-    """
-    )
+    """)
 
     rows = _comment_data.execute(sql)
 
@@ -42,24 +40,20 @@ def get_comments_on_old_posts() -> list[comment_service.CommentModel]:
 
 def get_other_user_activity(users, user_comment_ids) -> dict:
     logger.info("Getting other user history...")
-    sql = text(
-        f"""
+    sql = text(f"""
     select comments.* from comments join posts on comments.post_id = posts.id
     where comments.author in ('{"','".join(users)}')
     and comments.created_time >= '2021-06-01' and comments.created_time < '2021-11-01'
     and comments.id not in ({",".join(str(cid) for cid in user_comment_ids)});
-    """
-    )
+    """)
     rows = _comment_data.execute(sql)
     comment_list = [comment_service.CommentModel(row) for row in rows]
 
-    sql = text(
-        f"""
+    sql = text(f"""
     select posts.* from posts
     where posts.author in ('{"','".join(users)}')
     and posts.created_time >= '2021-06-01' and posts.created_time < '2021-11-01';
-    """
-    )
+    """)
     rows = _post_data.execute(sql)
     post_list = [post_service.PostModel(row) for row in rows]
 
@@ -69,12 +63,10 @@ def get_other_user_activity(users, user_comment_ids) -> dict:
 def get_posts(post_list: list) -> dict:
     logger.info("Getting posts...")
 
-    sql = text(
-        f"""
+    sql = text(f"""
     select posts.* from posts
     where posts.id36 in ('{"','".join(post_list)}');
-    """
-    )
+    """)
     rows = _post_data.execute(sql)
     posts = [post_service.PostModel(row) for row in rows]
     posts_by_id = {post.id: post for post in posts}

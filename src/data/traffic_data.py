@@ -31,12 +31,10 @@ class TrafficData(BaseData):
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
 
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM traffic_monthly
         WHERE date >= :start_date and date <= :end_date;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, start_date=start_date_str, end_date=end_date_str)
         if not result_rows:
@@ -50,12 +48,10 @@ class TrafficData(BaseData):
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
 
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM traffic_daily
         WHERE date >= :start_date and date <= :end_date;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, start_date=start_date_str, end_date=end_date_str)
         if not result_rows:
@@ -69,12 +65,10 @@ class TrafficData(BaseData):
 
         target_date_str = target_date.replace(day=1).isoformat()
 
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM traffic_monthly
         WHERE date = :date;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, date=target_date_str)
         if not result_rows:
@@ -87,12 +81,10 @@ class TrafficData(BaseData):
 
         target_date_str = target_date.isoformat()
 
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM traffic_daily
         WHERE date = :date;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, date=target_date_str)
         if not result_rows:

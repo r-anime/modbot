@@ -12,7 +12,6 @@ from services import post_service, comment_service
 from utils import discord, reddit as reddit_utils
 from utils.logger import logger
 
-
 # Current reddit session, initialized when first starting up or after an error.
 reddit = None
 

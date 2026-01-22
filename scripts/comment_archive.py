@@ -14,7 +14,6 @@ from services import post_service, comment_service, user_service, base_data_serv
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
-
 # Current reddit session, subreddit, and Pushshift API client, initialized when first starting up or after an error.
 reddit = None
 subreddit = None

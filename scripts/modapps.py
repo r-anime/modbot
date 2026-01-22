@@ -16,7 +16,6 @@ import config_loader
 from services import comment_service, post_service, mod_action_service
 from utils import reddit as reddit_utils
 
-
 username_key = "What is your Reddit username?"
 
 

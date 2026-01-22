@@ -17,7 +17,6 @@ from services import post_service
 from utils.logger import logger
 from utils.reddit import base36decode
 
-
 _post_data = PostData()
 _snapshot_data = SnapshotData()
 _user_data = UserData()

@@ -15,12 +15,10 @@ class UserModel(BaseModel):
 
 class UserData(BaseData):
     def get_user(self, username: str) -> Optional[UserModel]:
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM users
         WHERE username = :username;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, username=username)
         if not result_rows:
@@ -29,12 +27,10 @@ class UserData(BaseData):
         return UserModel(result_rows[0])
 
     def get_moderators(self) -> list[UserModel]:
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM users
         WHERE moderator = TRUE;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql)
 

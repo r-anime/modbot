@@ -4,7 +4,6 @@ Generic methods for handling model CRUD in the database.
 
 from data.base_data import BaseData, BaseModel
 
-
 _base_data = BaseData()
 
 

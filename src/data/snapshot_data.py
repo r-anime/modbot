@@ -42,12 +42,10 @@ class SnapshotData(BaseData):
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
 
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM snapshots
         WHERE date >= :start_date and date <= :end_date;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, start_date=start_date_str, end_date=end_date_str)
         if not result_rows:
@@ -67,12 +65,10 @@ class SnapshotData(BaseData):
         date = copy_datetime.date().isoformat()
         hour = copy_datetime.hour
 
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM snapshots
         WHERE date = :date AND hour = :hour;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, date=date, hour=hour)
         if not result_rows:
@@ -92,14 +88,12 @@ class SnapshotData(BaseData):
         date = copy_datetime.date().isoformat()
         hour = copy_datetime.hour
 
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM snapshot_frontpage JOIN snapshots s on snapshot_frontpage.snapshot_id = s.id
         WHERE s.date = :date AND s.hour = :hour
         AND snapshot_frontpage.post_id = :post_id
         AND snapshot_frontpage.rank <= :min_rank;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, date=date, hour=hour, post_id=post_id, min_rank=min_rank)
         if not result_rows:
@@ -111,11 +105,9 @@ class SnapshotData(BaseData):
     def get_post_hours_ranked(self, post_id: int, min_rank: int = 25) -> int:
         """Gets the number of hours a post has been ranked."""
 
-        sql = text(
-            """
+        sql = text("""
         SELECT count(*) as total_hours FROM snapshot_frontpage WHERE post_id = :post_id AND rank <= :min_rank;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, post_id=post_id, min_rank=min_rank)
         hours_ranked = result_rows[0]["total_hours"]

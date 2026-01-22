@@ -8,7 +8,6 @@ Create Date: 2021-05-03 17:46:42.655713+00:00
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
 revision = "a2be73588d9d"
 down_revision = "02533d88ffd0"
@@ -17,8 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
     ALTER TABLE posts ADD COLUMN IF NOT EXISTS sent_to_feed BOOLEAN NOT NULL DEFAULT false;
 
     CREATE TABLE IF NOT EXISTS snapshots (
@@ -37,15 +35,12 @@ def upgrade():
         score int,
         PRIMARY KEY (snapshot_id, rank)
     );
-    """
-    )
+    """)
 
 
 def downgrade():
-    op.execute(
-        """
+    op.execute("""
     DROP TABLE IF EXISTS snapshot_frontpage;
     DROP TABLE IF EXISTS snapshots;
     ALTER TABLE posts DROP COLUMN IF EXISTS sent_to_feed;
-    """
-    )
+    """)

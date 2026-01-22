@@ -7,7 +7,6 @@ from data.snapshot_data import SnapshotData, SnapshotModel, SnapshotFrontpageMod
 from services import post_service
 from utils.logger import logger
 
-
 _snapshot_data = SnapshotData()
 
 

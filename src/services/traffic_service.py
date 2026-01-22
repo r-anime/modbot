@@ -2,7 +2,6 @@ import datetime
 
 from data.traffic_data import TrafficData, TrafficMonthlyModel, TrafficDailyModel
 
-
 _traffic_data = TrafficData()
 
 

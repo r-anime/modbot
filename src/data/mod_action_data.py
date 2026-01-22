@@ -23,12 +23,10 @@ class ModActionModel(BaseModel):
 
 class ModActionData(BaseData):
     def get_mod_action_by_id(self, mod_action_id: str) -> Optional[ModActionModel]:
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM mod_actions
         WHERE id = :mod_action_id;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, mod_action_id=mod_action_id)
         if not result_rows:
@@ -58,14 +56,12 @@ class ModActionData(BaseData):
         where_str = " AND ".join(where_clauses)
         order_str = "ORDER BY created_time DESC" if order == "DESC" else ""
 
-        sql = text(
-            f"""
+        sql = text(f"""
             SELECT * FROM mod_actions
             WHERE {where_str}
             {order_str}
             {limit_str};
-            """
-        )
+            """)
 
         result_rows = self.execute(sql, **sql_kwargs)
         result_models = [ModActionModel(row) for row in result_rows]
@@ -94,12 +90,10 @@ class ModActionData(BaseData):
 
         where_str = " AND ".join(where_clauses)
 
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT * FROM mod_actions
         WHERE {where_str};
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, **sql_kwargs)
         return [ModActionModel(row) for row in result_rows]
@@ -158,12 +152,10 @@ class ModActionData(BaseData):
 
         where_str = " AND ".join(where_clauses)
 
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT COUNT({distinct}) FROM mod_actions
         WHERE {where_str};
-        """
-        )
+        """)
 
         # Will return a list of tuples with only one item in each, e.g. [(2910,)]
         result = self.execute(sql, **sql_kwargs)

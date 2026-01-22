@@ -4,7 +4,6 @@ import logging
 
 import config_loader
 
-
 logger = None
 
 

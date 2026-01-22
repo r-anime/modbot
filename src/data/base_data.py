@@ -10,7 +10,6 @@ from sqlalchemy.engine.result import Row
 
 from data.session import session_scope
 
-
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)  # To use a dict for a jsonb column, errors without.
 
 
@@ -123,16 +122,14 @@ class BaseData:
         # If error_on_conflict is false, will still return existing row.
         conflict_sql = "ON CONFLICT DO NOTHING" if not error_on_conflict else ""
 
-        sql = text(
-            f"""
+        sql = text(f"""
             INSERT INTO {model.table}
             ({sql_column_str})
             VALUES
             ({sql_param_str})
             {conflict_sql}
             RETURNING *;
-        """
-        )
+        """)
 
         with session_scope() as session:
             result_row = session.execute(sql, model.modified_fields).fetchone()
@@ -164,16 +161,14 @@ class BaseData:
         if len(model.modified_fields) > 1:
             sql_column_str = f"({sql_column_str})"
 
-        sql = text(
-            f"""
+        sql = text(f"""
             UPDATE {model.table} SET
             {sql_column_str}
             =
             ({sql_param_str})
             WHERE {model.pk_field} = :pk
             RETURNING *;
-        """
-        )
+        """)
 
         sql_parameterized = copy(model.modified_fields)
         sql_parameterized["pk"] = getattr(model, model.pk_field)
@@ -185,10 +180,8 @@ class BaseData:
         return new_model
 
     def delete(self, model: BaseModel):
-        sql = text(
-            f"""DELETE FROM {model.table}
-            WHERE {model.pk_field} = :pk"""
-        )
+        sql = text(f"""DELETE FROM {model.table}
+            WHERE {model.pk_field} = :pk""")
 
         return self.execute(sql, pk=getattr(model, model.pk_field))
 

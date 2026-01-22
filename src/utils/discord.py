@@ -8,7 +8,6 @@ import requests
 import config_loader
 from utils.logger import logger
 
-
 MESSAGE_LIMIT = 2000
 
 # Use these to escape characters that would become formatting.

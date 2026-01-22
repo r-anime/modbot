@@ -36,12 +36,10 @@ class CommentModel(BaseModel):
 
 class CommentData(BaseData):
     def get_comment_by_id(self, comment_id: int) -> Optional[CommentModel]:
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM comments
         WHERE id = :comment_id;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, comment_id=comment_id)
         if not result_rows:
@@ -50,12 +48,10 @@ class CommentData(BaseData):
         return CommentModel(result_rows[0])
 
     def get_comments_by_post_id(self, post_id: int) -> list[CommentModel]:
-        sql = text(
-            """
+        sql = text("""
             SELECT * FROM comments
             WHERE post_id = :post_id;
-            """
-        )
+            """)
 
         result_rows = self.execute(sql, post_id=post_id)
         return [CommentModel(row) for row in result_rows]
@@ -77,19 +73,15 @@ class CommentData(BaseData):
         where_str = " AND ".join(where_clauses)
 
         if exclude_cdf:
-            sql = text(
-                f"""
+            sql = text(f"""
                 SELECT * FROM comments c JOIN posts p ON c.post_id = p.id
                 WHERE {where_str} AND p.title not like 'Casual Discussion Fridays - Week of %'
-                """
-            )
+                """)
         else:
-            sql = text(
-                f"""
+            sql = text(f"""
                 SELECT * FROM comments c
                 WHERE {where_str};
-                """
-            )
+                """)
 
         result_rows = self.execute(sql, **sql_kwargs)
         return [CommentModel(row) for row in result_rows]
@@ -111,19 +103,15 @@ class CommentData(BaseData):
         where_str = " AND ".join(where_clauses)
 
         if exclude_cdf:
-            sql = text(
-                f"""
+            sql = text(f"""
                 SELECT COUNT(*) FROM comments c JOIN posts p ON c.post_id = p.id
                 WHERE {where_str} AND p.title not like 'Casual Discussion Fridays - Week of %'
-                """
-            )
+                """)
         else:
-            sql = text(
-                f"""
+            sql = text(f"""
                 SELECT COUNT(*) FROM comments c
                 WHERE {where_str};
-                """
-            )
+                """)
 
         return self.execute(sql, **sql_kwargs)[0][0]
 
@@ -144,12 +132,10 @@ class CommentData(BaseData):
             sql_kwargs["exclude_authors"] = tuple(exclude_authors)
 
         where_str = " AND ".join(where_clauses)
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT COUNT(*) FROM comments
         WHERE {where_str};
-        """
-        )
+        """)
 
         # Will return a list of tuples with only one item in each, e.g. [(2910,)]
         result = self.execute(sql, **sql_kwargs)
@@ -174,12 +160,10 @@ class CommentData(BaseData):
             sql_kwargs["exclude_authors"] = tuple(exclude_authors)
 
         where_str = " AND ".join(where_clauses)
-        sql = text(
-            f"""
+        sql = text(f"""
         SELECT COUNT(DISTINCT author) FROM comments
         WHERE {where_str};
-        """
-        )
+        """)
 
         # Will return a list of tuples with only one item in each, e.g. [(2910,)]
         result = self.execute(sql, **sql_kwargs)

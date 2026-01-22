@@ -7,7 +7,6 @@ from old.menuupdater import SubredditMenuUpdater
 from utils import reddit as reddit_utils
 from utils.logger import logger
 
-
 name = "Casual Discussion Fridays"
 short_name = "Casual Disc Fridays"
 author = "AutoModerator"
@@ -38,8 +37,7 @@ logger.debug(f'Found old CDF id {old_cdf.id} "{old_cdf.title}"')
 
 
 # Step 1: Notify old CDF that the new CDF is up
-notify_comment = old_cdf.reply(
-    f"""
+notify_comment = old_cdf.reply(f"""
 Hello CDF users! Since it is Friday, the new CDF is now live. Please follow
 [this link]({new_cdf.permalink}) to move on to the new thread.
 
@@ -48,8 +46,7 @@ Hello CDF users! Since it is Friday, the new CDF is now live. Please follow
 A quick note: this thread will remain open for one hour so that you can finish
 your conversations. Please **do not** use this thread for spamming or other
 undesirable behavior. Excessive violations will result in sanctions.
-"""
-)
+""")
 notify_comment.disable_inbox_replies()
 notify_comment.mod.distinguish()
 
@@ -66,8 +63,7 @@ logger.debug("Waking up. Locking old CDF")
 
 old_cdf.mod.lock()
 logger.info("Old CDF thread has been locked")
-last_comment = old_cdf.reply(
-    f"""
+last_comment = old_cdf.reply(f"""
 This thread has been locked.
 We will see you all in the new Casual Discussion Fridays thread,
 which you can find [here]({new_cdf.permalink}).
@@ -76,8 +72,7 @@ Reminder to keep the new discussion *welcoming* and be mindful of new users.
 Don't take the shitpost too far — but have fun!
 
 [](#bot-chan)
-"""
-)
+""")
 last_comment.disable_inbox_replies()
 last_comment.mod.distinguish(sticky=True)
 

@@ -8,7 +8,6 @@ import config_loader
 from utils import reddit
 from utils.logger import logger
 
-
 SEARCH_TIMEOUT = 3600
 LINK_REGEX = r"\[{name}\]\(.*?\)"
 LINK_FORMAT = "[{name}]({link})"
