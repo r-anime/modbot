@@ -13,12 +13,10 @@ class RabbitmqPendingMessageModel(BaseModel):
 
 class RabbitmqPendingMessageData(BaseData):
     def get_rabbitmq_pending_message_by_id(self, id: int) -> Optional[RabbitmqPendingMessageModel]:
-        sql = text(
-            """
+        sql = text("""
         SELECT * FROM rabbitmq_pending_messages
         WHERE id = :id;
-        """
-        )
+        """)
 
         result_rows = self.execute(sql, id=id)
         if not result_rows:
@@ -27,12 +25,10 @@ class RabbitmqPendingMessageData(BaseData):
         return RabbitmqPendingMessageModel(result_rows[0])
 
     def get_rabbitmq_pending_messages(self) -> list[RabbitmqPendingMessageModel]:
-        sql = text(
-            """
+        sql = text("""
             SELECT * FROM rabbitmq_pending_messages
             ORDER BY created_time ASC;
-            """
-        )
+            """)
 
         result_rows = self.execute(sql)
         return [RabbitmqPendingMessageModel(row) for row in result_rows]

@@ -7,8 +7,6 @@ Create Date: 2025-12-20 02:24:58.431032+00:00
 """
 
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision = "a5f2ff2c36f8"
@@ -18,8 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        """
+    op.execute("""
     CREATE TABLE rabbitmq_pending_messages (
         id BIGSERIAL PRIMARY KEY,
         type TEXT NOT NULL,
@@ -28,14 +25,12 @@ def upgrade():
         json_body JSONB NOT NULL,
         created_time TIMESTAMPTZ NOT NULL DEFAULT now()
     );
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_rabbitmq_pending_messages_created_time ON rabbitmq_pending_messages(created_time);
-    """
-    )
+    CREATE UNIQUE INDEX IF NOT EXISTS
+        idx_rabbitmq_pending_messages_created_time ON rabbitmq_pending_messages(created_time);
+    """)
 
 
 def downgrade():
-    op.execute(
-        """
+    op.execute("""
     DROP TABLE IF EXISTS rabbitmq_pending_messages;
-    """
-    )
+    """)
