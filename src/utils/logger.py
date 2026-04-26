@@ -1,6 +1,7 @@
 """Provides a singleton logger to be imported and used from any other module."""
 
 import logging
+import logging.handlers
 
 import config_loader
 
@@ -16,7 +17,11 @@ def _setup_logging():
 
     log_file_path = config_loader.LOGGING["file_path"]
     if log_file_path:
-        file_handler = logging.FileHandler(config_loader.LOGGING["file_path"])
+        file_handler = logging.handlers.RotatingFileHandler(
+            log_file_path,
+            backupCount=config_loader.LOGGING["number_logs"] - 1,
+            maxBytes=config_loader.LOGGING["max_mebibytes"] * 1024 * 1024,
+        )
         file_handler.setLevel(config_loader.LOGGING["log_level_file"])
         file_handler.setFormatter(formatter)
 
