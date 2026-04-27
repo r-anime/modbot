@@ -53,6 +53,8 @@ DISCORD = {
 
 LOGGING = {
     "file_path": os.environ.get("LOG_FILE_PATH"),
+    "number_logs": int(os.environ.get("LOG_FILE_NUMBER_FILES")),
+    "max_mebibytes": int(os.environ.get("LOG_FILE_MAX_MEBIBYTES")),
     "log_level_file": os.environ.get("LOG_LEVEL_FILE"),
     "log_level_console": os.environ.get("LOG_LEVEL_CONSOLE"),
 }
