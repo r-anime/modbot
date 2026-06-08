@@ -1,7 +1,7 @@
 praw==7.8.2
 psycopg2-binary==2.9.12
 requests==2.34.2
-SQLAlchemy==1.4.54
+SQLAlchemy==2.0.50
 python-dotenv==1.2.2
 mintotp==0.3.0
 humanize==4.15.0
