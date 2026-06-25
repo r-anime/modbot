@@ -11,6 +11,7 @@ from datetime import datetime, timezone, timedelta
 import re
 import requests
 from io import StringIO
+import prawcore
 
 import config_loader
 from services import comment_service, post_service, mod_action_service
@@ -128,6 +129,14 @@ def process_row(row, activity_start_date, activity_end_date):
     )
     response_body += f"> [View comments via Pushshift]({ps_url}) (including deleted)\n\n"
 
+    redditor = reddit.redditor(username)
+    redditor_exists = True
+    try:
+        _ = redditor.id  # force PRAW to load the redditor
+    except prawcore.exceptions.NotFound:
+        response_body += f"**Reddit account not found for u/{username}**\n\n"
+        redditor_exists = False
+
     # Get the activity of the user both in the 90-day window prior to the posting of applications (as specified)
     # and overall history on /r/anime.
     activity_start_time_str = activity_start_date.isoformat()
@@ -168,15 +177,15 @@ def process_row(row, activity_start_date, activity_end_date):
     response_body += f" Submissions: {user_posts_window:,} ({user_posts_total:,} since 2020-01-01)\n\n"
     response_body += f"> Mod actions since 2021-01-01: {mod_actions_str}\n\n"
 
-    redditor = reddit.redditor(username)
-    other_subs = redditor.moderated()
-    response_body += "### Other Subreddits Moderated (Subscribers)\n\n> "
-    if other_subs:
-        for sub in other_subs:
-            response_body += f"/r/{sub.display_name} ({sub.subscribers:,}) // "
-        response_body += "\n\n"
-    else:
-        response_body += "(none)\n\n"
+    if redditor_exists:
+        other_subs = redditor.moderated()
+        response_body += "### Other Subreddits Moderated (Subscribers)\n\n> "
+        if other_subs:
+            for sub in other_subs:
+                response_body += f"/r/{sub.display_name} ({sub.subscribers:,}) // "
+            response_body += "\n\n"
+        else:
+            response_body += "(none)\n\n"
 
     response_parts = []
     for question, answer in row.items():
