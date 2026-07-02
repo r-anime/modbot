@@ -1,15 +1,14 @@
 import json
 import pika
 import praw
-from collections import deque
 from json import JSONEncoder
 from praw.models.mod_action import ModAction
 from praw.models.reddit.comment import Comment
 from praw.models.reddit.submission import Submission
 from types import FunctionType
-from typing import Deque
 from uuid import UUID
 
+from services import rabbitmq_pending_message_service
 from data.comment_data import CommentModel
 from data.mod_action_data import ModActionModel
 from data.post_data import PostModel
@@ -34,8 +33,6 @@ class PRAWJSONEncoder(JSONEncoder):
 
 
 class RabbitService:
-    messages_to_retry: Deque[dict] = deque()
-
     def __init__(self, config_dict: dict):
         self.config = config_dict
         self.connection = None
@@ -79,11 +76,7 @@ class RabbitService:
 
                 self.queues[key] = {"exchange": exchange_name, "queue": queue_name}
 
-        if self.messages_to_retry:
-            logger.info(f"Retrying {len(self.messages_to_retry)} RabbitMQ messages")
-        while self.messages_to_retry:
-            exchange_name, queue_name, json_body = self.messages_to_retry.popleft()
-            self._publish_message(exchange_name, queue_name, json_body)
+        self._republish_messages()
 
     def init_connection(self, reconnect: bool = True):
         logger.info(f"{"Rec" if reconnect else "C"}onnecting to RabbitMQ...")
@@ -95,21 +88,21 @@ class RabbitService:
         logger.info(f"Publishing post to RabbitMQ: {reddit_post.id} ({status})")
         queue = self.queues["post"]
         body = {"status": status, "reddit": reddit_post, "db": post.to_dict()}
-        self._publish_message(queue["exchange"], queue["queue"], json.dumps(body, cls=PRAWJSONEncoder))
+        self._publish_message(queue["exchange"], queue["queue"], json.dumps(body, cls=PRAWJSONEncoder), "post")
 
     def publish_comment(self, reddit_comment: Comment, comment: CommentModel, status: str = "new"):
         logger.info(f"Publishing comment to RabbitMQ: {reddit_comment.id} ({status})")
         queue = self.queues["comment"]
         body = {"status": status, "reddit": reddit_comment, "db": comment.to_dict()}
-        self._publish_message(queue["exchange"], queue["queue"], json.dumps(body, cls=PRAWJSONEncoder))
+        self._publish_message(queue["exchange"], queue["queue"], json.dumps(body, cls=PRAWJSONEncoder), "comment")
 
     def publish_mod_action(self, reddit_mod_action: ModAction, mod_action: ModActionModel, status: str = "new"):
         logger.info(f"Publishing mod action to RabbitMQ: {reddit_mod_action.id} ({status})")
         queue = self.queues["mod_action"]
         body = {"status": status, "reddit": reddit_mod_action, "db": mod_action.to_dict()}
-        self._publish_message(queue["exchange"], queue["queue"], json.dumps(body, cls=PRAWJSONEncoder))
+        self._publish_message(queue["exchange"], queue["queue"], json.dumps(body, cls=PRAWJSONEncoder), "mod action")
 
-    def _publish_message(self, exchange_name: str, queue_name: str, json_body: str):
+    def _publish_message(self, exchange_name: str, queue_name: str, json_body: str, type: str):
         try:
             self.channel.basic_publish(
                 exchange=exchange_name,
@@ -136,6 +129,45 @@ class RabbitService:
                 )
                 logger.info("Successfully send message after reconnect")
             except Exception:
-                logger.error("Still couldn't connect to RabbitMQ. Saving message to retry memory list")
-                self.messages_to_retry.append((exchange_name, queue_name, json_body))
+                logger.exception("Still couldn't connect to RabbitMQ. Saving message to retry table")
+                rabbitmq_pending_message_service.insert_pending_message(exchange_name, queue_name, json_body, type)
                 raise
+
+    def _republish_messages(self):
+        messages_to_retry = rabbitmq_pending_message_service.get_pending_messages()
+        if messages_to_retry:
+            logger.info(f"Retrying {len(messages_to_retry)} RabbitMQ messages")
+        number_of_successful_retries = 0
+        for pending_message in messages_to_retry:
+            logger.info(
+                f"Republishing {pending_message.type} to RabbitMQ"
+                + f": {pending_message.json_body["reddit"]["id"]} ({pending_message.json_body["status"]})"
+            )
+            try:
+                json_body = json.dumps(pending_message.json_body, cls=PRAWJSONEncoder)
+                self._republish_message(pending_message.exchange_name, pending_message.queue_name, json_body)
+                number_of_successful_retries += rabbitmq_pending_message_service.delete_pending_message(pending_message)
+            except Exception:
+                if number_of_successful_retries > 0:
+                    logger.warn(
+                        f"Successfully retried {number_of_successful_retries}"
+                        + f" / {len(messages_to_retry)} RabbitMQ messages"
+                    )
+                logger.exception("RabbitMQ is still down. Messages will stay pending.")
+                raise
+        logger.info(f"Successfully retried all {number_of_successful_retries} RabbitMQ messages")
+
+    def _republish_message(self, exchange_name: str, queue_name: str, json_body: str):
+        try:
+            self.channel.basic_publish(
+                exchange=exchange_name,
+                routing_key=queue_name,
+                body=json_body,
+                properties=pika.BasicProperties(
+                    delivery_mode=pika.DeliveryMode.Persistent,
+                    content_type="application/json",
+                    headers={self.config["retry_attempt_header"]: 1},
+                ),
+            )
+        except Exception:
+            logger.exception("Still couldn't connect to RabbitMQ. Message already saved to retry")
