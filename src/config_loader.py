@@ -28,7 +28,7 @@ DB_CONNECTION = (
 
 WEB_SERVER = {
     "port": int(os.environ.get("WEB_SERVER_PORT")),
-    "debug": os.environ.get("WEB_SERVER_DEBUG").lower() in ("true", "1", "t")
+    "debug": os.environ.get("WEB_SERVER_DEBUG").lower() in ("true", "1", "t"),
 }
 
 RABBITMQ = {

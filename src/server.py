@@ -1,4 +1,3 @@
-import os
 from flask import Flask
 
 import config_loader
@@ -12,10 +11,10 @@ app.register_blueprint(ping_bp)
 app.register_blueprint(ingestion_bp)
 
 
-@app.route('/')
+@app.route("/")
 def home():
     return "Modbot webserver"
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=config_loader.WEB_SERVER["port"], debug=config_loader.WEB_SERVER["debug"])
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=config_loader.WEB_SERVER["port"], debug=config_loader.WEB_SERVER["debug"])
