@@ -26,6 +26,11 @@ DB_CONNECTION = (
     f'{os.environ.get("DB_HOST")}:{os.environ.get("DB_PORT")}/{os.environ.get("DB_NAME")}'
 )
 
+WEB_SERVER = {
+    "port": int(os.environ.get("WEB_SERVER_PORT")),
+    "debug": os.environ.get("WEB_SERVER_DEBUG").lower() in ("true", "1", "t")
+}
+
 RABBITMQ = {
     "connection": f"amqp://{os.environ.get("RABBITMQ_USER")}:{os.environ.get("RABBITMQ_PASS")}@"
     f"{os.environ.get("RABBITMQ_HOST")}:{os.environ.get("RABBITMQ_PORT")}{os.environ.get("RABBITMQ_VHOST")}",
