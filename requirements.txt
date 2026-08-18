@@ -1,4 +1,4 @@
-praw==8.0.2
+praw==8.0.3
 psycopg2-binary==2.9.12
 requests==2.34.2
 SQLAlchemy==1.4.54
