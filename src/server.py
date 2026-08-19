@@ -54,7 +54,6 @@ def log_request_info(response):
     if request.query_string:
         path_with_query = f"{request.path}?{request.query_string.decode('utf-8')}"
 
-    timestamp_str = time.strftime("%d/%b/%Y %H:%M:%S", time.localtime())
     protocol = request.environ.get("SERVER_PROTOCOL", "HTTP/1.1")
     status_code = response.status_code
 
@@ -76,7 +75,7 @@ def log_request_info(response):
     reset = "\033[0m" if color else ""
 
     logger.info(
-        f"{request.remote_addr} - - [{timestamp_str}] "
+        f"{request.remote_addr} - "
         f'[{owner}@{scope}] "{color}{request.method} {path_with_query} {protocol}{reset}" '
         f"{response.status_code} "
         f"({elapsed_ms:.2f}ms)"
