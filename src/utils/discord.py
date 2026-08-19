@@ -14,6 +14,14 @@ MESSAGE_LIMIT = 2000
 _UNESCAPE_RE = re.compile(r"\\")
 _ESCAPE_RE = re.compile(r"([*_~`|\\])")
 
+_URGENT_MESSAGES = []
+
+_URGENT_MESSAGE_PING = "@here" if config_loader.DISCORD.get("urgent_message_ping") else ""
+_URGENT_MESSAGE_HEADER = (
+    f"{_URGENT_MESSAGE_PING} **Urgent message from Modbot** (r/{config_loader.REDDIT.get('subreddit')})"
+)
+_URGENT_MESSAGE_FOOTER = "*Beep Boop*"
+
 
 def escape_formatting(string):
     """
@@ -25,7 +33,7 @@ def escape_formatting(string):
     return escaped
 
 
-def send_webhook_message(channel_webhook_url, json_content, return_message_id=False, retries=3):
+def send_webhook_message(channel_webhook_url, json_content, return_message_id=False, retries=3, force=False):
     """
     Send a message to the specified channel via a webhook.
 
@@ -38,7 +46,7 @@ def send_webhook_message(channel_webhook_url, json_content, return_message_id=Fa
      False otherwise
     """
 
-    if not config_loader.DISCORD["enabled"]:
+    if not config_loader.DISCORD["enabled"] and not (force and config_loader.DEPLOYED):
         return True
 
     attempt = 0
@@ -89,3 +97,33 @@ def update_webhook_message(channel_webhook_url, message_id, json_content, retrie
 
     logger.error(f"Unable to send webhook message, content: {json_content}")
     return False
+
+
+def add_urgent_message(message: str):
+    logger.warning(f'Urgent message from Modbot to Discord appended: "{message}"')
+    _URGENT_MESSAGES.append(message)
+
+
+def clear_urgent_messages():
+    global _URGENT_MESSAGES
+    _URGENT_MESSAGES = []
+
+
+def flush_urgent_messages() -> bool:
+    if not _URGENT_MESSAGES:
+        return False
+
+    if not config_loader.DISCORD["enabled"] and not config_loader.DEPLOYED:
+        return False
+
+    messages_body = "\n\n".join([f"**Message {index}**: {msg}" for index, msg in enumerate(_URGENT_MESSAGES, start=1)])
+
+    message_text = f"{_URGENT_MESSAGE_HEADER}\n\n{messages_body}\n\n{_URGENT_MESSAGE_FOOTER}"
+
+    send_webhook_message(
+        config_loader.DISCORD["modbot_urgent_message_webhook_url"], {"content": message_text}, force=True
+    )
+
+    logger.warning(f"{len(_URGENT_MESSAGES)} Urgent messages from Modbot to Discord flushed")
+    clear_urgent_messages()
+    return True
