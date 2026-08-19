@@ -24,8 +24,13 @@ class SuppressWerkzeugRequests(logging.Filter):
 werkzeug_logger = logging.getLogger("werkzeug")
 werkzeug_logger.addFilter(SuppressWerkzeugRequests())
 
-for logger_name in ("werkzeug", "gunicorn.error", "gunicorn.access"):
+for logger_name in ("werkzeug", "gunicorn.error"):
     logging.getLogger(logger_name).handlers = logger.handlers
+
+# Explicitly silence gunicorn's access logger
+gunicorn_access = logging.getLogger("gunicorn.access")
+gunicorn_access.handlers = []
+gunicorn_access.propagate = False
 
 app.register_blueprint(ping_bp)
 app.register_blueprint(db_ingestion_bp)
