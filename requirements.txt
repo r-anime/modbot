@@ -2,7 +2,7 @@ praw==8.0.3
 psycopg2-binary==2.9.12
 requests==2.34.2
 SQLAlchemy==1.4.54
-python-dotenv==1.2.2
+python-dotenv==1.2.3
 mintotp==0.3.0
 humanize==4.16.0
 pika==1.4.4
