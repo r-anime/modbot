@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 # Loads .env file's settings in when outside of container
 load_dotenv()
 
+ENV = os.environ.get("ENV", "unknown").strip().lower()
+DEPLOYED = ENV in ("prod", "stage")
+
 REDDIT = {
     "subreddit": os.environ.get("SUBREDDIT_NAME_TO_ACT_ON"),
     "auth": {
@@ -51,9 +54,14 @@ RABBITMQ = {
 
 DISCORD = {
     "enabled": os.environ.get("DISCORD_ENABLED", "False").lower() in ["true", "t", "1", "yes", "y"],  # load as bool
+    "urgent_message_ping": os.environ.get("DISCORD_URGENT_MESSAGE_PING", "False").lower()
+    in ["true", "t", "1", "yes", "y"],
     "webhook_url": os.environ.get("DISCORD_WEBHOOK_URL"),
     "post_webhook_url": os.environ.get("DISCORD_POST_WEBHOOK_URL", os.environ.get("DISCORD_WEBHOOK_URL")),
     "mod_log_webhook_url": os.environ.get("DISCORD_MOD_LOG_WEBHOOK_URL", os.environ.get("DISCORD_WEBHOOK_URL")),
+    "modbot_urgent_message_webhook_url": os.environ.get(
+        "DISCORD_MODBOT_URGENT_MESSAGE_WEBHOOK_URL", os.environ.get("DISCORD_WEBHOOK_URL")
+    ),
 }
 
 LOGGING = {
