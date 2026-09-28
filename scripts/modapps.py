@@ -16,10 +16,12 @@ import prawcore
 import config_loader
 from services import comment_service, post_service, mod_action_service
 from utils import reddit as reddit_utils
+from utils.logger import logger
 
 username_key = "What is your Reddit username?"
 
 
+logger.info("Connecting to Reddit...")
 reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
 
 
@@ -116,10 +118,10 @@ def process_row(row, activity_start_date, activity_end_date):
     """
 
     username = re.sub("/?u?/", "", row[username_key]).strip()
-    print(f"Processing {username}...")
+    logger.info(f"Processing {username}...")
 
     if row.get("Troll"):
-        print(f"Skipping {username} as they are marked as troll")
+        logger.info(f"Skipping {username} as they are marked as troll")
         return username, [], True
 
     response_body = f"### {username_key}\n\n> https://www.reddit.com/user/{username}\n\n"
@@ -198,14 +200,14 @@ def process_row(row, activity_start_date, activity_end_date):
 
         # Single answer longer than comment limit, for the verbose folks.
         if len(line) > 10000:
-            print(f"Single answer longer than 10k for {username} on {question}.")
+            logger.info(f"Single answer longer than 10k for {username} on {question}.")
             response_parts.append(response_body)
             response_body = f"### {question}"
             answer_lines = answer.splitlines()
 
             # Use shorter paragraphs dammit. TODO: try to fix this?
             if any(len(f"### {question} (cont.)\n\n> {line}") > 10000 for line in answer_lines):
-                print(f"Line too long for {username}, skipping them.")
+                logger.info(f"Line too long for {username}, skipping them.")
                 return username, [], False
 
             for line in answer_lines:
@@ -225,7 +227,7 @@ def process_row(row, activity_start_date, activity_end_date):
 
     response_parts.append(response_body)
 
-    print(f"Done with {username}.")
+    logger.info(f"Done with {username}.")
     return username, response_parts, False
 
 
@@ -285,7 +287,7 @@ def main():
     bot_username = config_loader.REDDIT["auth"]["username"]
 
     while datetime.now(timezone.utc) <= end_datetime:
-        print("Checking Responses")
+        logger.info("Checking Responses")
         voting_thread = upsert_voting_thread(voting_subreddit, app_announcement_datetime)
 
         app_comments = {}
@@ -305,10 +307,10 @@ def main():
 
         upsert_voting_thread(voting_subreddit, app_announcement_datetime, len(legit_apps), len(troll_apps))
 
-        print(f"sleeping for {60 * args.refresh_rate_mins}")
+        logger.info(f"sleeping for {60 * args.refresh_rate_mins}")
         time.sleep(60 * args.refresh_rate_mins)
 
-    print(f"Reached end time of {end_datetime}, so exiting")
+    logger.info(f"Reached end time of {end_datetime}, so exiting")
 
 
 if __name__ == "__main__":
