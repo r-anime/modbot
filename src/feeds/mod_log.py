@@ -155,6 +155,7 @@ def parse_mod_action(mod_action: ModAction, reddit, subreddit, rabbit: RabbitSer
         if not post:
             logger.debug(f"Saving post {post_id}")
             post = post_service.add_post(reddit_post)
+            rabbit.publish_post(reddit_post, post)
         else:
             post = post_service.update_post(post, reddit_post)
 
@@ -210,12 +211,14 @@ def parse_mod_action(mod_action: ModAction, reddit, subreddit, rabbit: RabbitSer
 
             if not post:
                 post_service.add_post(reddit_comment.submission)
+                rabbit.publish_post(reddit_comment.submission, post)
 
             # Since all comments will reference a parent if it exists, add all parent comments first.
             logger.debug(f"Saving parent comments of {comment_id}")
             comment_service.add_comment_parent_tree(reddit, reddit_comment)
             logger.debug(f"Saving comment {comment_id}")
             comment = comment_service.add_comment(reddit_comment)
+            rabbit.publish_comment(reddit_comment, comment)
         else:
             # Update our record of the comment if necessary.
             comment = comment_service.update_comment(comment, reddit_comment)
