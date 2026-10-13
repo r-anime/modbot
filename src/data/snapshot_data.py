@@ -110,5 +110,5 @@ class SnapshotData(BaseData):
         """)
 
         result_rows = self.execute(sql, post_id=post_id, min_rank=min_rank)
-        hours_ranked = result_rows[0]["total_hours"]
+        hours_ranked = result_rows[0]._mapping["total_hours"]
         return hours_ranked
