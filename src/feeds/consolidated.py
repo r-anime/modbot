@@ -45,14 +45,6 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
                 mod_log_stream = subreddit.mod.stream.log(skip_existing=False, pause_after=-1)
 
             while True:
-                if log:
-                    logger.debug("Starting mod log stream...")
-                    for mod_action in mod_log_stream:
-                        if mod_action is None:
-                            time.sleep(3)
-                            break
-                        mod_log.parse_mod_action(mod_action, reddit, subreddit, rabbit)
-
                 if posts:
                     logger.debug("Starting post stream...")
                     for submission in submission_stream:
@@ -68,6 +60,14 @@ def monitor_streams(posts: bool = False, comments: bool = False, log: bool = Fal
                             time.sleep(3)
                             break
                         new_comments.process_comment(comment, reddit, rabbit)
+
+                if log:
+                    logger.debug("Starting mod log stream...")
+                    for mod_action in mod_log_stream:
+                        if mod_action is None:
+                            time.sleep(3)
+                            break
+                        mod_log.parse_mod_action(mod_action, reddit, subreddit, rabbit)
 
                 if spam:
                     logger.debug("Starting spam stream...")
