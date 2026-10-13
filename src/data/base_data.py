@@ -40,8 +40,9 @@ class BaseModel:
     def __getattr__(self, item):
         # Loads column from row if it exists.
         if self._row and item in self._columns:
-            object.__setattr__(self, item, self._row[item])
-            return self._row[item]
+            value = self._row._mapping[item]
+            object.__setattr__(self, item, value)
+            return value
 
         raise AttributeError(f"Could not locate column named {item}")
 
