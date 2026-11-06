@@ -19,7 +19,7 @@ reddit = reddit_utils.get_reddit_instance(config_loader.REDDIT["auth"])
 subreddit = reddit.subreddit(config_loader.REDDIT["subreddit"])
 
 # Step 0: get new and old CDF
-search_str = f"{name.lower()} author:{author}"
+search_str = f'title:"{name.lower()}" author:{author} author:automoderator'
 logger.debug(f"Search query: {search_str}")
 cdfs = subreddit.search(search_str, sort="new")
 
@@ -38,15 +38,28 @@ logger.debug(f'Found old CDF id {old_cdf.id} "{old_cdf.title}"')
 
 # Step 1: Notify old CDF that the new CDF is up
 notify_comment = old_cdf.reply(f"""
-Hello CDF users! Since it is Friday, the new CDF is now live. Please follow
+Hello CDF users! Since it is Friday and I've finally found the party after getting a
+[little](https://www.reddit.com/r/anime/comments/1xjbakc/anime_questions_recommendations_and_discussion/19s7axy4bq5uq/)
+[lost](https://www.reddit.com/r/anime/comments/1xjbakc/anime_questions_recommendations_and_discussion/19s7axppjj8yp/),
+the new CDF is now live. Please follow
 [this link]({new_cdf.permalink}) to move on to the new thread.
 
-[](#heartbot "And don't forget to be nice to new users!")
+[Spez](#fuckyou)
 
 A quick note: this thread will remain open for one hour so that you can finish
 your conversations. Please **do not** use this thread for spamming or other
 undesirable behavior. Excessive violations will result in sanctions.
 """)
+# notify_comment = old_cdf.reply(f"""
+# Hello CDF users! Since it is Friday, the new CDF is now live. Please follow
+# [this link]({new_cdf.permalink}) to move on to the new thread.
+#
+# [](#heartbot "And don't forget to be nice to new users!")
+#
+# A quick note: this thread will remain open for one hour so that you can finish
+# your conversations. Please **do not** use this thread for spamming or other
+# undesirable behavior. Excessive violations will result in sanctions.
+# """)
 notify_comment.disable_inbox_replies()
 notify_comment.mod.distinguish()
 
