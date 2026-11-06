@@ -43,7 +43,7 @@ class SubredditMenuUpdater:
         logger.info(f"Completed running subreddit menu updater for {name}")
 
     def _find_post(self, name, author):
-        search_str = f'title:"{name}" author:{author}'.lower()
+        search_str = f'title:"{name}" author:{author} {"author: automoderator" if name == "Casual Discussion Fridays" else ""}'.lower()
         search_start_time = time.time()
 
         logger.debug(f"Started search with query '{search_str}'")

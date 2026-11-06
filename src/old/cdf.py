@@ -9,7 +9,7 @@ from utils.logger import logger
 
 name = "Casual Discussion Fridays"
 short_name = "Casual Disc Fridays"
-author = "AutoModerator"
+author = "AnimeMod"
 
 # First wait for new thread to go up and update links (standard)
 SubredditMenuUpdater(name=name, short_name=short_name, author=author)
