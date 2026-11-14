@@ -40,17 +40,22 @@ def approve_user_items(username, start_date, end_date):
     }
     discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
 
+    total_items = len(id_list)
+    item_count = 0
     for item in reddit.info(fullnames=id_list):
+        item_count += 1
         try:
             if item.banned_by is not True:  # not removed by spam filter
                 skip_list.append(item.fullname)
                 continue
             item.mod.approve()
-            logger.info(f"Approved {item.fullname}")
+            logger.info(f"Approved {item.fullname} ({item_count}/{total_items}) for /u/{username}")
             approve_list.append(item.fullname)
         except Exception:
             error_list.append(item.fullname)
-            logger.exception(f"Ran into exception for {item}, continuing")
+            logger.exception(
+                f"Ran into exception for {item} ({item_count}/{total_items}) for /u/{username}, continuing"
+            )
 
     logger.info(f"Finished unspamming {username}")
     logger.info(f"Total {len(approve_list)} approved, {len(skip_list)} skipped, {len(error_list)} errors.")
