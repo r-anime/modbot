@@ -5,7 +5,8 @@ Use with -h for instructions.
 """
 
 import argparse
-from datetime import datetime, timezone, time
+import time
+from datetime import datetime, timezone
 
 import config_loader
 from services import post_service, comment_service
