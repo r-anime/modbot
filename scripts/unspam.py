@@ -26,13 +26,13 @@ def approve_user_items(username, start_date, end_date):
     error_list = []
     skip_list = []
 
-    logger.info(f"Found {len(id_list)} items in database by {username}")
+    logger.info(f"Found {len(id_list):,} items in database by {username}")
     embed_json = {
         "author": {
             "name": f"Unspam - /u/{username}",
         },
         "title": f"Beginning to unspam /u/{username}",
-        "description": f"Found {len(id_list)} items in the database",
+        "description": f"Found {len(id_list):,} items in the database",
         "timestamp": datetime.now(tz=timezone.utc).isoformat(),
         "url": f"https://reddit.com/user/{username}",
         "fields": [],
@@ -49,22 +49,22 @@ def approve_user_items(username, start_date, end_date):
                 skip_list.append(item.fullname)
                 continue
             item.mod.approve()
-            logger.info(f"Approved {item.fullname} ({item_count}/{total_items}) for /u/{username}")
+            logger.info(f"Approved {item.fullname} ({item_count:,}/{total_items:,}) for /u/{username}")
             approve_list.append(item.fullname)
         except Exception:
             error_list.append(item.fullname)
             logger.exception(
-                f"Ran into exception for {item} ({item_count}/{total_items}) for /u/{username}, continuing"
+                f"Ran into exception for {item} ({item_count:,}/{total_items:,}) for /u/{username}, continuing"
             )
 
     logger.info(f"Finished unspamming {username}")
-    logger.info(f"Total {len(approve_list)} approved, {len(skip_list)} skipped, {len(error_list)} errors.")
+    logger.info(f"Total {len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors.")
     embed_json = {
         "author": {
             "name": f"Unspam - /u/{username}",
         },
         "title": f"Finished unspamming /u/{username}",
-        "description": f"{len(approve_list)} approved, {len(skip_list)} skipped, {len(error_list)} errors",
+        "description": f"{len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors",
         "timestamp": datetime.now(tz=timezone.utc).isoformat(),
         "url": f"https://reddit.com/user/{username}",
         "fields": [],
