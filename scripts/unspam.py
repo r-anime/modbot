@@ -94,7 +94,7 @@ def wait_for_rate_limit():
         return
 
     delay = (usage - THROTTLE_START) / THROTTLE_WIDTH * window_size / (total_limit * THROTTLE_WIDTH / 2)
-    logger.debug(f"Used: {used:,}, remaining: {remaining:,}, delay: #{delay:,}")
+    logger.debug(f"Used: {used:,}, remaining: {remaining:,}, delay: {delay:,} seconds")
     time.sleep(delay)
 
 
