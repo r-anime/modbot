@@ -5,7 +5,7 @@ Use with -h for instructions.
 """
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time
 
 import config_loader
 from services import post_service, comment_service
@@ -14,6 +14,9 @@ from utils.logger import logger
 
 # Current reddit session, initialized when first starting up or after an error.
 reddit = None
+THROTTLE_START = 0.50  # throttle starts %
+THROTTLE_END = 0.80  # enough sleep for it to make it to the next window by this %
+THROTTLE_WIDTH = THROTTLE_END - THROTTLE_START
 
 
 def approve_user_items(username, start_date, end_date):
@@ -48,6 +51,7 @@ def approve_user_items(username, start_date, end_date):
             if item.banned_by is not True:  # not removed by spam filter
                 skip_list.append(item.fullname)
                 continue
+            wait_for_rate_limit()
             item.mod.approve()
             logger.info(f"Approved {item.fullname} ({item_count:,}/{total_items:,}) for /u/{username}")
             approve_list.append(item.fullname)
@@ -71,6 +75,25 @@ def approve_user_items(username, start_date, end_date):
         "color": 0x00CC00,
     }
     discord.send_webhook_message(config_loader.DISCORD["webhook_url"], {"embeds": [embed_json]})
+
+
+# uses the reddit rate limit vars to slow the script down so other things don't get rate limited as badly.
+def wait_for_rate_limit():
+    limits = reddit.auth.limits
+    if limits["used"] is None:
+        return
+
+    used = limits["used"]
+    remaining = limits["remaining"]
+    total_limit = used + remaining
+    window_size = reddit.config.window_size
+    usage = used / total_limit
+
+    if usage < THROTTLE_START:
+        return
+
+    delay = (usage - THROTTLE_START) / THROTTLE_WIDTH * window_size / (total_limit * THROTTLE_WIDTH / 2)
+    time.sleep(delay)
 
 
 def _get_parser() -> argparse.ArgumentParser:
