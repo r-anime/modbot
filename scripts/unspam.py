@@ -32,7 +32,10 @@ def approve_user_items(username, start_date, end_date):
 
     logger.info(f"Found {len(id_list):,} items in database by {username}")
     send_to_discord(
-        ["webhook_url"], username, f"Beginning to unspam /u/{username}", f"Found {len(id_list):,} items in the database"
+        ["mod_log_webhook_url", "webhook_url"],
+        username,
+        f"Beginning to unspam /u/{username}",
+        f"Found {len(id_list):,} items in the database",
     )
 
     total_items = len(id_list)
@@ -56,7 +59,7 @@ def approve_user_items(username, start_date, end_date):
     logger.info(f"Finished unspamming {username}")
     logger.info(f"Total {len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors.")
     send_to_discord(
-        ["webhook_url"],
+        ["mod_log_webhook_url", "webhook_url"],
         username,
         f"Finished unspamming /u/{username}",
         f"{len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors",
