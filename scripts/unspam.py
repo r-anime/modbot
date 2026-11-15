@@ -67,7 +67,8 @@ def approve_user_items(username, start_date, end_date):
                 ["mod_log_webhook_url"],
                 username,
                 f"Unspamming /u/{username} progress report",
-                f"{len(approve_list):,} approved, {remaining:,} remaining, {len(skip_list):,} skipped, {len(error_list):,} errors"
+                f"{len(approve_list):,} approved, {remaining:,} remaining"
+                + f", {len(skip_list):,} skipped, {len(error_list):,} errors"
                 + f"\nETA: <t:{eta}:F> (<t:{eta}:R>), current rate: {rate * 60:,.2f} approvals / min",
             )
             cycle_start_time = datetime.now()
