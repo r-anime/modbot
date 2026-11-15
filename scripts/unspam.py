@@ -32,7 +32,7 @@ def approve_user_items(username, start_date, end_date):
 
     logger.info(f"Found {len(id_list):,} items in database by {username}")
     send_to_discord(
-        ["mod_log_webhook_url", "webhook_url"],
+        ["mod_log_webhook_url"],
         username,
         f"Beginning to unspam /u/{username}",
         f"Found {len(id_list):,} items in the database",
@@ -64,7 +64,7 @@ def approve_user_items(username, start_date, end_date):
             rate = rate_limit_count / (datetime.now() - cycle_start_time).total_seconds()
             eta = int(datetime.now().timestamp() + remaining / rate)
             send_to_discord(
-                ["mod_log_webhook_url", "webhook_url"],
+                ["mod_log_webhook_url"],
                 username,
                 f"Unspamming /u/{username} progress report",
                 f"{len(approve_list):,} approved, {remaining:,} remaining, {len(skip_list):,} skipped, {len(error_list):,} errors"
@@ -76,7 +76,7 @@ def approve_user_items(username, start_date, end_date):
     logger.info(f"Finished unspamming {username}")
     logger.info(f"Total {len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors.")
     send_to_discord(
-        ["mod_log_webhook_url", "webhook_url"],
+        ["mod_log_webhook_url"],
         username,
         f"Finished unspamming /u/{username}",
         f"{len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors",
