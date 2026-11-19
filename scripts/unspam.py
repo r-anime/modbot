@@ -26,8 +26,8 @@ def approve_user_items(username, start_date, end_date):
     posts.sort(key=lambda post: post.created_time)
     comments.sort(key=lambda comment: comment.created_time)
 
-    id_list = [f"t3_{post.id36}" for post in posts if not post.removed]
-    id_list.extend(f"t1_{comment.id36}" for comment in comments if not comment.removed)
+    id_list = [f"t3_{post.id36}" for post in posts]
+    id_list.extend(f"t1_{comment.id36}" for comment in comments)
     approve_list = []
     error_list = []
     skip_list = []
