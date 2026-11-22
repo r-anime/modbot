@@ -187,6 +187,10 @@ def load_post_flairs(subreddit):
     logger.debug(f"Flairs loaded: {_flair_colors}")
 
 
+def mark_deleted_by_id36(id36: str) -> None:
+    _post_data.mark_deleted_by_id36(id36)
+
+
 def _create_post_model(reddit_post: Submission) -> PostModel:
     """
     Populate a new PostModel based on the Reddit thread.

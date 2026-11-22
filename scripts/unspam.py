@@ -31,6 +31,7 @@ def approve_user_items(username, start_date, end_date):
     approve_list = []
     error_list = []
     skip_list = []
+    deleted_list = []
 
     logger.info(f"Found {len(id_list):,} non deleted items in database by {username}")
     send_to_discord(
@@ -48,6 +49,22 @@ def approve_user_items(username, start_date, end_date):
         item_count += 1
         new_rate_limit_count = rate_limit_count
         try:
+            # deleted comments/posts
+            if item.fullname.startswith("t3_"):
+                if getattr(item, "removed_by_category", "") == "deleted":
+                    logger.info(f"{item.fullname} (post) ({item_count:,}/{total_items:,}) is deleted for /u/{username}")
+                    post_service.mark_deleted_by_id36(item.id)
+                    deleted_list.append(item.fullname)
+                    continue
+            else:
+                if item.author is None and item.body in ("[deleted]", "[removed]"):
+                    logger.info(
+                        f"{item.fullname} (comment) ({item_count:,}/{total_items:,}) is deleted for /u/{username}"
+                    )
+                    comment_service.mark_deleted_by_id36(item.id)
+                    deleted_list.append(item.fullname)
+                    continue
+
             if item.banned_by is not True:  # not removed by spam filter
                 skip_list.append(item.fullname)
                 continue
@@ -62,7 +79,7 @@ def approve_user_items(username, start_date, end_date):
             )
         if new_rate_limit_count < rate_limit_count:
             # cycle reset
-            remaining = len(id_list) - len(approve_list) - len(skip_list) - len(error_list)
+            remaining = len(id_list) - len(approve_list) - len(skip_list) - len(error_list) - len(deleted_list)
             rate = rate_limit_count / (datetime.now() - cycle_start_time).total_seconds()
             eta = int(datetime.now().timestamp() + remaining / rate)
             send_to_discord(
@@ -70,19 +87,23 @@ def approve_user_items(username, start_date, end_date):
                 username,
                 f"Unspamming /u/{username} progress report",
                 f"{len(approve_list):,} approved, {remaining:,} remaining"
-                + f", {len(skip_list):,} skipped, {len(error_list):,} errors"
+                + f", {len(skip_list):,} skipped, {len(deleted_list):,} deleted, {len(error_list):,} errors"
                 + f"\nETA: <t:{eta}:F> (<t:{eta}:R>), current rate: {rate * 60:,.2f} approvals / min",
             )
             cycle_start_time = datetime.now()
         rate_limit_count = new_rate_limit_count
 
     logger.info(f"Finished unspamming {username}")
-    logger.info(f"Total {len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors.")
+    logger.info(
+        f"Total {len(approve_list):,} approved, {len(skip_list):,} skipped"
+        + f", {len(deleted_list):,} deleted, {len(error_list):,} errors."
+    )
     send_to_discord(
         ["mod_log_webhook_url"],
         username,
         f"Finished unspamming /u/{username}",
-        f"{len(approve_list):,} approved, {len(skip_list):,} skipped, {len(error_list):,} errors",
+        f"{len(approve_list):,} approved, {len(skip_list):,} skipped"
+        + f", {len(deleted_list):,} deleted, {len(error_list):,} errors",
     )
 
 
