@@ -165,6 +165,10 @@ def add_comment_parent_tree(reddit: Reddit, reddit_comment: Comment):
         _comment_data.insert(comment, error_on_conflict=False)
 
 
+def mark_deleted_by_id36(id36: str) -> None:
+    _comment_data.mark_deleted_by_id36(id36)
+
+
 def _create_comment_model(reddit_comment: Comment) -> CommentModel:
     """
     Creates a model without inserting it into the database.

@@ -186,3 +186,12 @@ class PostData(BaseData):
         # Will return a list of tuples with only one item in each, e.g. [(2910,)]
         result = self.execute(sql, **sql_kwargs)
         return result[0][0]
+
+    def mark_deleted_by_id36(self, id36: str) -> None:
+        sql = text("""
+                   UPDATE posts
+                   SET deleted = TRUE,
+                       deleted_time = CURRENT_TIMESTAMP
+                   WHERE id36 = :id36;
+                   """)
+        self.execute(sql, id36=id36)
