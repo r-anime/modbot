@@ -173,6 +173,7 @@ class CommentData(BaseData):
         sql = text("""
                    UPDATE comments
                    SET deleted = TRUE
-                   WHERE id36 = :id36;
+                   WHERE id36 = :id36
+                   RETURNING id36;
                    """)
         self.execute(sql, id36=id36)

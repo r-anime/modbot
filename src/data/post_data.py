@@ -192,6 +192,7 @@ class PostData(BaseData):
                    UPDATE posts
                    SET deleted = TRUE,
                        deleted_time = CURRENT_TIMESTAMP
-                   WHERE id36 = :id36;
+                   WHERE id36 = :id36
+                   RETURNING id36;
                    """)
         self.execute(sql, id36=id36)
